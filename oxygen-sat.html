@@ -32,9 +32,10 @@
 </div>
 
 <script>
-var oxySatTargets, oxySat, graph, xAxis, yAxis;
+var oxySatTargetUpper, oxySatTargetLower, oxySat, graph, xAxis, yAxis;
 
 oxySatTargetUpper = [
+    {x: 0, y: null},
     {x: 1 * 60, y: 0.05},
     {x: 2 * 60, y: 0.05},
     {x: 3 * 60, y: 0.05},
@@ -43,6 +44,7 @@ oxySatTargetUpper = [
     {x: 10 * 60, y: 0.10}
 ];
 oxySatTargetLower = [
+    {x: 0, y: null},
     {x: 1 * 60, y: 0.60},
     {x: 2 * 60, y: 0.65},
     {x: 3 * 60, y: 0.70},
@@ -50,16 +52,50 @@ oxySatTargetLower = [
     {x: 5 * 60, y: 0.80},
     {x: 10 * 60, y: 0.85}
 ];
+oxySat = [
+    {x: 30, y: 0.30},
+    {x: 35, y: 0.33},
+    {x: 40, y: 0.35},
+    {x: 45, y: 0.34},
+    {x: 50, y: 0.36},
+    {x: 55, y: 0.38},
+    {x: 60, y: 0.38},
+    {x: 65, y: 0.40},
+    {x: 70, y: 0.39},
+    {x: 75, y: 0.41},
+    {x: 80, y: 0.43},
+    {x: 85, y: 0.43},
+    {x: 90, y: 0.43},
+    {x: 95, y: 0.41},
+    {x: 100, y: 0.46},
+    {x: 105, y: 0.48},
+    {x: 110, y: 0.48},
+    {x: 115, y: 0.50},
+    {x: 120, y: 0.52},
+    {x: 125, y: 0.55},
+    {x: 130, y: 0.58},
+    {x: 145, y: 0.60},
+    {x: 150, y: 0.62},
+    {x: 155, y: 0.64},
+    {x: 160, y: 0.66},
+    {x: 165, y: 0.70},
+    {x: 170, y: 0.71},
+    {x: 175, y: 0.73},
+    {x: 180, y: 0.74},
+    {x: 185, y: 0.76},
+]
 
 graph = new Rickshaw.Graph({
     element: document.querySelector("#chart"),
+    renderer: 'multi',
     width: 600,
     height: 400,
     series: [
-        {color: 'white', data: oxySatTargetLower},
-        {color: 'darkred', data: oxySatTargetUpper}
+        {color: 'white', data: oxySatTargetLower, renderer: 'stack'},
+        {color: 'darkred', data: oxySatTargetUpper, renderer: 'stack'},
+        {color: 'steelblue', data: oxySat, renderer: 'line'}
     ],
-    interpolation: 'step-after',
+    interpolation: 'linear',
     min: 0,
     max: 1
 });
