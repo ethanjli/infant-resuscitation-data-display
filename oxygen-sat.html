@@ -36,6 +36,20 @@
 
 <script>
 
+function toDateString(totalSeconds) {
+    var minutes = parseInt(totalSeconds / 60) % 60;
+    var seconds = totalSeconds % 60;
+    return (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
+}
+function fromDateString(dateString) {
+    var a = dateString.split(':');
+    return a[0] * 60 + a[1] * 1;
+}
+
+var signalTimes = [20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650];
+signalTimes = signalTimes.map(toDateString);
+var SpO2Signal = [0.35, 0.37, 0.38, 0.38, 0.39, 0.38, 0.40, 0.41, 0.43, 0.44, 0.46, 0.47, 0.48, 0.48, 0.49, 0.51, 0.52, 0.51, 0.52, 0.53, 0.55, 0.56, 0.56, 0.57, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.62, 0.63, 0.64, 0.65, 0.66, 0.68, 0.69, 0.68, 0.69, 0.70, 0.71, 0.72, 0.72, 0.71, 0.72, 0.73, 0.74, 0.76, 0.79, 0.80, 0.82, 0.83, 0.85, 0.86, 0.87, 0.88, 0.87, 0.86, 0.87, 0.88, 0.89, 0.90, 0.91, 0.92];
+
 var chart = c3.generate({
     bindto: '#chart',
     size: {
@@ -48,21 +62,23 @@ var chart = c3.generate({
             targetLower: 'targetTime',
             SpO2: 'signalTime'
         },
+        xFormat: '%M:%S',
         columns: [
-            ['targetTime', 60, 120, 180, 240, 300, 600],
+            ['targetTime', toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(600)],
             ['targetUpper', 0.65, 0.7, 0.75, 0.8, 0.85, 0.95],
             ['targetLower', 0.6, 0.65, 0.7, 0.75, 0.8, 0.85],
-            ['signalTime', 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200],
-            ['SpO2', 0.35, 0.4, 0.42, 0.48, 0.5, 0.52, 0.55, 0.6, 0.65, 0.67, 0.69, 0.71, 0.69, 0.71, 0.75, 0.77, 0.8, 0.85, 0.9]
+            ['signalTime'],
+            ['SpO2']
         ],
         types: {
-            targetLower: 'area-step',
-            targetUpper: 'area-step',
+            targetLower: 'area',
+            targetUpper: 'area',
             SpO2: 'line'
         },
         axes: {
             targetLower: 'y',
             targetUpper: 'y',
+            targetUpper: 'y2',
             SpO2: 'y2'
         },
         colors: {
@@ -77,13 +93,15 @@ var chart = c3.generate({
                 text: 'Time (s)',
                 position: 'outer-center'
             },
-            type: 'indexed',
+            type: 'timeseries',
             tick: {
+                format: '%M:%S',
                 fit: false,
-                values: [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600]
+                values: [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600].map(toDateString)
             },
-            min: 0,
-            max: 0
+            min: toDateString(0),
+            max: toDateString(600),
+            padding: 0
         },
         y: {
             label: {
@@ -126,63 +144,36 @@ var chart = c3.generate({
     }
 });
 
-setTimeout(function() {
-    chart.axis.max({x: 20});
-}, 500);
-setTimeout(function() {
-    chart.axis.max({x: 30});
-}, 1000);
-setTimeout(function() {
-    chart.axis.max({x: 40});
-}, 1500);
-setTimeout(function() {
-    chart.axis.max({x: 50});
-}, 2000);
-setTimeout(function() {
-    chart.axis.max({x: 60});
-}, 2500);
-setTimeout(function() {
-    chart.axis.max({x: 70});
-}, 3000);
-setTimeout(function() {
-    chart.axis.max({x: 80});
-}, 3500);
-setTimeout(function() {
-    chart.axis.max({x: 90});
-}, 4000);
-setTimeout(function() {
-    chart.axis.max({x: 100});
-}, 4500);
-setTimeout(function() {
-    chart.axis.max({x: 110});
-}, 5000);
-setTimeout(function() {
-    chart.axis.max({x: 120});
-}, 5500);
-setTimeout(function() {
-    chart.axis.max({x: 130});
-}, 6000);
-setTimeout(function() {
-    chart.axis.max({x: 140});
-}, 6500);
-setTimeout(function() {
-    chart.axis.max({x: 150});
-}, 7000);
-setTimeout(function() {
-    chart.axis.max({x: 160});
-}, 7500);
-setTimeout(function() {
-    chart.axis.max({x: 170});
-}, 8000);
-setTimeout(function() {
-    chart.axis.max({x: 180});
-}, 8500);
-setTimeout(function() {
-    chart.axis.max({x: 190});
-}, 9000);
-setTimeout(function() {
-    chart.axis.max({x: 200});
-}, 9500);
+function DataStreamer(delayInterval, rightPadding) {
+    this.delayInterval = delayInterval;
+    this.i = -1;
+}
+DataStreamer.prototype.flowChart = function() {
+    chart.flow({
+        columns: [
+            ['signalTime', signalTimes[this.i]],
+            ['SpO2', SpO2Signal[this.i]]
+        ],
+        duration: this.delayInterval,
+        to: toDateString(0),
+    });
+}
+DataStreamer.prototype.flowNext = function() {
+    this.i = this.i + 1;
+    if (this.i == signalTimes.length - 1) {
+        return;
+    }
+    if (fromDateString(signalTimes[this.i]) > 600) {
+        chart.axis.max({x: signalTimes[this.i]});
+    }
+    this.flowChart();
+    setTimeout(this.flowNext.bind(this), this.delayInterval);
+}
+DataStreamer.prototype.startStreaming = function() {
+    this.flowNext();
+}
+var dataStreamer = new DataStreamer(200);
+dataStreamer.startStreaming();
 
 </script>
 
