@@ -4595,9 +4595,9 @@
         var $$ = this.owner, config = $$.config,
             position = this.getXAxisLabelPosition();
         if (config.axis_rotated) {
-            return position.isInner ? "1.2em" : -25 - this.getMaxTickWidth('x');
+            return position.isInner ? "1.2em" : -35 - this.getMaxTickWidth('x');
         } else {
-            return position.isInner ? "-0.5em" : config.axis_x_height ? config.axis_x_height - 10 : "3em";
+            return position.isInner ? "-0.5em" : config.axis_x_height ? config.axis_x_height + 5 : "3em";
         }
     };
     Axis.prototype.dyForYAxisLabel = function dyForYAxisLabel() {
@@ -4606,7 +4606,7 @@
         if ($$.config.axis_rotated) {
             return position.isInner ? "-0.5em" : "3em";
         } else {
-            return position.isInner ? "1.2em" : -24 - ($$.config.axis_y_inner ? 0 : (this.getMaxTickWidth('y') + 10));
+            return position.isInner ? "1.2em" : -36 - ($$.config.axis_y_inner ? 0 : (this.getMaxTickWidth('y') + 10));
         }
     };
     Axis.prototype.dyForY2AxisLabel = function dyForY2AxisLabel() {
@@ -4615,7 +4615,7 @@
         if ($$.config.axis_rotated) {
             return position.isInner ? "1.2em" : "-2.2em";
         } else {
-            return position.isInner ? "-0.5em" : 32 + ($$.config.axis_y2_inner ? 0 : (this.getMaxTickWidth('y2') + 15));
+            return position.isInner ? "-0.5em" : 50 + ($$.config.axis_y2_inner ? 0 : (this.getMaxTickWidth('y2') + 15));
         }
     };
     Axis.prototype.textAnchorForXAxisLabel = function textAnchorForXAxisLabel() {
