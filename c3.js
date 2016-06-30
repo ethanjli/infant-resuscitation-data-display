@@ -4708,11 +4708,11 @@
             if (targetCount === 1) {
                 tickValues = [values[0]];
             } else if (targetCount === 2) {
-                tickValues = [values[0], values[values.length - 1]];
+                tickValues = [values[0], values[values.length - 3]];
             } else if (targetCount > 2) {
                 count = targetCount - 2;
                 start = values[0];
-                end = values[values.length - 1];
+                end = values[values.length - 3];
                 interval = (end - start) / (count + 1);
                 // re-construct unique values
                 tickValues = [start];
@@ -4722,6 +4722,8 @@
                 }
                 tickValues.push(end);
             }
+            console.log(values);
+            console.log(tickValues);
         }
         if (!forTimeSeries) { tickValues = tickValues.sort(function (a, b) { return a - b; }); }
         return tickValues;
@@ -6910,6 +6912,24 @@
                 max: this.axis.max(),
                 min: this.axis.min()
             };
+        }
+    };
+
+    c3_chart_fn.axis.tickFit = function (tickFit) {
+        var $$ = this.internal, config = $$.config;
+        if (arguments.length) {
+            config.axis_x_tick_fit = tickFit;
+        } else {
+            return config.axis_x_tick_fit;
+        }
+    };
+
+    c3_chart_fn.axis.tickCount = function (tickCount) {
+        var $$ = this.internal, config = $$.config;
+        if (arguments.length) {
+            config.axis_x_tick_count = tickCount;
+        } else {
+            return config.axis_x_tick_count;
         }
     };
 
