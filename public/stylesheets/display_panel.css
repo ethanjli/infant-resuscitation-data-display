@@ -1,6 +1,14 @@
 .container-fluid {
     margin: 20px;
 }
+.vertical-center {
+    min-height: 90%;
+    min-height: 90vh;
+
+    display: flex;
+    align-items: center;
+}
+
 #chart .c3-axis {
     stroke-width: 2px;
 }
@@ -23,6 +31,7 @@
 #chart .c3-line-SpO2 {
     stroke-width: 2px;
 }
+
 .current-display {
     font: 72px sans-serif;
     font-weight: bold;
