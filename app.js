@@ -9,7 +9,7 @@ var port = process.env.PORT || 5000;
 var server = http.Server(app);
 var socketio = require('socket.io')(server)
 server.listen(port, function() {
-  console.log('Listening on port %d in %s mode', port, app.settings.env);
+  console.log('[Server] Listening on port %d in %s mode', port, app.settings.env);
 });
 
 //app.use(logger('dev'));
@@ -35,6 +35,5 @@ app.use(function(err, req, res, next) {
   next(err);
 });
 
-var sensors = require('./lib/sensors');
 var sockets = require('./lib/sockets');
-socketio.on('connection', sockets.connection(sensors));
+socketio.on('connection', sockets.connection);
