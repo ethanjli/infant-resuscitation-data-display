@@ -2,50 +2,20 @@
 
 <head>
 
+<script src="/socket.io/socket.io.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
-<script src="c3.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
-<style>
-.container-fluid {
-    margin: 20px;
-}
-#chart .c3-axis {
-    stroke-width: 2px;
-}
-#chart .c3-axis-x-label {
-    font: 24px sans-serif;
-}
-#chart .c3-axis-y-label {
-    font: 24px sans-serif;
-}
-#chart .c3-axis-y2-label {
-    font: 24px sans-serif;
-}
-#chart .tick {
-    font: 20px sans-serif;
-}
-#chart .c3-area {
-    opacity: 1;
-    stroke-width: 0px;
-}
-#chart .c3-line-SpO2 {
-    stroke-width: 2px;
-}
-.current-display {
-    font: 72px sans-serif;
-    font-weight: bold;
-    line-height: 0.5;
-}
-.current-display-box {
-    margin-top: 40px;
-    margin-bottom: 40px;
-}
-</style>
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
+<script src="/javascripts/c3.js"></script>
+
+<link type="text/css" rel="stylesheet" href="/stylesheets/display_panel.css">
 
 </head>
 
@@ -65,13 +35,29 @@
             </div>
             <div class="row current-display-box">
                 <h1 class="current-display-label">FiO<sub>2</sub>:</h1>
-                <h2 id="current-fio2-display" class="current-display">20%</h2>
+                <h2 id="current-fio2-display" class="current-display">0%</h2>
             </div>
         </div>
+    </div>
+    <div class="row">
+        <span id="status-connection" class="label label-danger">Not connected to sensors!</span>
     </div>
 </div>
 
 <script>
+
+function updateStatusConnected() {
+    var statusElem = document.getElementById('status-connection');
+    statusElem.innerHTML = 'Connected to sensors';
+    statusElem.className = 'label label-default';
+    statusElem.style.visibility = 'hidden';
+}
+function updateStatusDisconnected() {
+    var statusElem = document.getElementById('status-connection');
+    statusElem.innerHTML = 'Not connected to sensors!';
+    statusElem.className = 'label label-danger';
+    statusElem.style.visibility = 'visible';
+}
 
 function toDateString(totalSeconds) {
     var minutes = parseInt(totalSeconds / 60) % 60;
@@ -190,37 +176,50 @@ function DataStreamer(delayInterval, rightPadding) {
     this.delayInterval = delayInterval;
     this.i = -1;
 }
-DataStreamer.prototype.flowChart = function() {
+DataStreamer.prototype.updateDisplay = function(time, spo2, fio2) {
+    if (fromDateString(time) > 600) {
+        chart.axis.max({x: time});
+        chart.axis.tickFit(true);
+        chart.axis.tickCount(9);
+    }
     chart.flow({
         columns: [
-            ['signalTime', signalTimes[this.i]],
-            ['SpO2', SpO2Signal[this.i]]
+            ['signalTime', time],
+            ['SpO2', spo2]
         ],
         duration: 0,
         to: toDateString(0),
     });
-    document.getElementById('current-spo2-display').innerHTML = Math.round(SpO2Signal[this.i] * 100) + '%';
-    document.getElementById('current-time-display').innerHTML = signalTimes[this.i];
+    document.getElementById('current-time-display').innerHTML = time;
+    document.getElementById('current-spo2-display').innerHTML = Math.round(spo2 * 100) + '%';
 }
 DataStreamer.prototype.flowNext = function() {
     this.i = this.i + 1;
     if (this.i == signalTimes.length - 1) {
         return;
     }
-    if (fromDateString(signalTimes[this.i]) > 600) {
-        chart.axis.max({x: signalTimes[this.i]});
-        chart.axis.tickFit(true);
-        chart.axis.tickCount(9);
-    }
-    this.flowChart();
+    this.updateDisplay(signalTimes[this.i], SpO2Signal[this.i], 0);
     setTimeout(this.flowNext.bind(this), this.delayInterval);
 }
 DataStreamer.prototype.startStreaming = function() {
     this.flowNext();
 }
 var dataStreamer = new DataStreamer(500);
-dataStreamer.startStreaming();
 
+var socket = io.connect('http://localhost');
+socket.on('connect', function(data) {
+    socket.emit('connected', {client: 'display-panel'});
+    updateStatusConnected();
+})
+socket.on('disconnect', function(data) {
+    updateStatusDisconnected();
+})
+socket.on('update', function(data) {
+    document.getElementById('current-time-display').innerHTML = data.time;
+    document.getElementById('current-spo2-display').innerHTML = Math.round(data.spo2 * 100) + '%';
+    document.getElementById('current-fio2-display').innerHTML = Math.round(data.fio2 * 100) + '%';
+    dataStreamer.startStreaming();
+});
 </script>
 
 </body>

@@ -1,0 +1,35 @@
+.container-fluid {
+    margin: 20px;
+}
+#chart .c3-axis {
+    stroke-width: 2px;
+}
+#chart .c3-axis-x-label {
+    font: 24px sans-serif;
+}
+#chart .c3-axis-y-label {
+    font: 24px sans-serif;
+}
+#chart .c3-axis-y2-label {
+    font: 24px sans-serif;
+}
+#chart .tick {
+    font: 20px sans-serif;
+}
+#chart .c3-area {
+    opacity: 1;
+    stroke-width: 0px;
+}
+#chart .c3-line-SpO2 {
+    stroke-width: 2px;
+}
+.current-display {
+    font: 72px sans-serif;
+    font-weight: bold;
+    line-height: 0.5;
+}
+.current-display-box {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
