@@ -16,7 +16,7 @@ app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname, '/display-panel.html'))
+  res.sendFile(path.join(__dirname, 'public', 'display-panel.html'))
 });
 app.get('/favicon.ico', function(req, res) {
   res.sendStatus(200);
