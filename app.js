@@ -16,7 +16,13 @@ server.listen(port, function() {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+});
+app.get('/display', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'display-panel.html'))
+});
+app.get('/control', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public', 'control-panel.html'))
 });
 app.get('/favicon.ico', function(req, res) {
   res.sendStatus(200);
