@@ -213,18 +213,17 @@ socket.on('initialize', function(data) {
     } else {
         console.log('Sockets: Initializing with previous data.');
     }
+    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
     var spO2Signal = data.spO2;
     spO2Signal.unshift('SpO2');
-    var fiO2 = data.fiO2;
     chart.load({
         columns: [
             time,
             spO2Signal
         ]
     });
-    setCurrentDisplay(time[time.length - 1], spO2Signal[spO2Signal.length - 1], fiO2);
 });
 socket.on('update', function(data) {
     //console.log('Sockets: Updating with sample at time ' + data.time);
