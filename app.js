@@ -1,10 +1,17 @@
 var express = require('express');
+var http = require('http');
+
 var path = require('path');
+var debug = require('debug')('infant-resuscitation-data-display:server');
 var logger = require('morgan');
+
 var app = express();
-var server = require('http').Server(app);
+var port = process.env.PORT || 5000;
+var server = http.Server(app);
 var io = require('socket.io')(server)
-server.listen(80);
+server.listen(port, function() {
+  console.log('Listening on port %d in %s mode', port, app.settings.env);
+});
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -23,17 +30,14 @@ app.use(function(req, res, next) {
   next(err);
 });
 
-// development error handler
-// will print stacktrace
+// development error handler, will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     next(err);
   });
 }
-
-// production error handler
-// no stacktraces leaked to user
+// production error handler, no stacktraces leaked to user
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   next(err);

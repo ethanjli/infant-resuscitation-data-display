@@ -206,7 +206,7 @@ DataStreamer.prototype.startStreaming = function() {
 }
 var dataStreamer = new DataStreamer(500);
 
-var socket = io.connect('http://localhost');
+var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     updateStatusConnected();
