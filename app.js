@@ -35,5 +35,7 @@ app.use(function(err, req, res, next) {
   next(err);
 });
 
-var sockets = require('./lib/sockets');
+var sensors = require('./lib/sensors');
+var streaming = require('./lib/streaming')(socketio, 500, sensors);
+var sockets = require('./lib/sockets')(streaming);
 socketio.on('connection', sockets.connection);

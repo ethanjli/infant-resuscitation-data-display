@@ -4722,8 +4722,6 @@
                 }
                 tickValues.push(end);
             }
-            console.log(values);
-            console.log(tickValues);
         }
         if (!forTimeSeries) { tickValues = tickValues.sort(function (a, b) { return a - b; }); }
         return tickValues;

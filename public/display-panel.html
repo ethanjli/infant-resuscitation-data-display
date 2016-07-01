@@ -69,9 +69,6 @@ function fromDateString(dateString) {
     return a[0] * 60 + a[1] * 1;
 }
 
-var SpO2Signal = [0.35, 0.25, 0.26, 0.30, 0.27, 0.33, 0.36, 0.37, 0.35, 0.40, 0.33, 0.41, 0.38, 0.40, 0.37, 0.38, 0.30, 0.33, 0.39, 0.37, 0.39, 0.42, 0.38, 0.41, 0.39, 0.40, 0.42, 0.39, 0.41, 0.42, 0.39, 0.43, 0.46, 0.45, 0.43, 0.44, 0.40, 0.42, 0.38, 0.44, 0.47, 0.46, 0.43, 0.47, 0.50, 0.48, 0.45, 0.44, 0.40, 0.38, 0.35, 0.36, 0.30, 0.33, 0.39, 0.45, 0.47, 0.43, 0.46, 0.48, 0.40, 0.44, 0.38, 0.38, 0.39, 0.37, 0.40, 0.42, 0.47, 0.51, 0.49, 0.52, 0.45, 0.43, 0.47, 0.42, 0.41, 0.42, 0.46, 0.50, 0.53, 0.51, 0.55, 0.52, 0.51, 0.47, 0.45, 0.43, 0.44, 0.42, 0.46, 0.45, 0.44, 0.48, 0.50, 0.52, 0.48, 0.48, 0.52, 0.53, 0.52, 0.48, 0.51, 0.50, 0.55, 0.57, 0.55, 0.56, 0.50, 0.48, 0.45, 0.49, 0.50, 0.47, 0.51, 0.52, 0.55, 0.56, 0.54, 0.60, 0.60, 0.52, 0.53, 0.52, 0.54, 0.57, 0.57, 0.60, 0.58, 0.57, 0.56, 0.58, 0.59, 0.60, 0.61, 0.59, 0.51, 0.62, 0.62, 0.60, 0.58, 0.50, 0.52, 0.55, 0.48, 0.59, 0.57, 0.60, 0.63, 0.64, 0.60, 0.62, 0.65, 0.66, 0.66, 0.67, 0.65, 0.66, 0.68, 0.70, 0.69, 0.65, 0.68, 0.65, 0.69, 0.75, 0.70, 0.68, 0.71, 0.72, 0.70, 0.72, 0.74, 0.72, 0.68, 0.70, 0.73, 0.78, 0.76, 0.74, 0.65, 0.70, 0.72, 0.70, 0.71, 0.78, 0.73, 0.75, 0.70, 0.72, 0.70, 0.75, 0.75, 0.74, 0.76, 0.74, 0.72, 0.78, 0.76, 0.70, 0.73, 0.74, 0.70, 0.75, 0.77, 0.60, 0.64, 0.58, 0.64, 0.60, 0.68, 0.64, 0.70, 0.79, 0.80, 0.78, 0.85, 0.75, 0.8, 0.82, 0.82, 0.81, 0.82, 0.80, 0.83, 0.86, 0.80, 0.85, 0.90, 0.80, 0.78, 0.81, 0.80, 0.77, 0.82, 0.86, 0.80, 0.83, 0.84, 0.83, 0.82, 0.84, 0.83, 0.85, 0.80, 0.82, 0.84, 0.86, 0.85, 0.87, 0.88, 0.82, 0.84, 0.82, 0.80, 0.85, 0.87, 0.89, 0.87, 0.88, 0.83, 0.88, 0.87, 0.89, 0.90, 0.80, 0.85, 0.84, 0.88, 0.86, 0.90, 0.91, 0.93, 0.90, 0.87, 0.89, 0.90, 0.92, 0.91, 0.92, 0.90, 0.89, 0.81, 0.84, 0.86, 0.86, 0.85, 0.88, 0.92, 0.93, 0.88, 0.82, 0.80, 0.85, 0.83, 0.85, 0.88, 0.92, 0.93, 0.90, 0.89, 0.91, 0.93, 0.92, 0.95, 0.90, 0.93, 0.92, 0.93, 0.94, 0.93, 0.94, 0.94, 0.95, 0.94, 0.94, 0.93, 0.98, 0.92, 0.90, 0.95, 0.93, 0.89, 0.88, 0.92, 0.95, 0.93, 0.96, 0.94, 0.92];
-var signalTimes = Array.apply(null, Array(SpO2Signal.length)).map(function(_, i) {return toDateString(20 + 2 * i)})
-
 var chart = c3.generate({
     bindto: '#chart',
     size: {
@@ -172,44 +169,32 @@ var chart = c3.generate({
     }
 });
 
-function DataStreamer(delayInterval, rightPadding) {
-    this.delayInterval = delayInterval;
-    this.i = -1;
-}
-DataStreamer.prototype.updateDisplay = function(time, spo2, fio2) {
-    if (fromDateString(time) > 600) {
-        chart.axis.max({x: time});
+function updateDisplay(time, spo2, fio2) {
+    var dateString = toDateString(time);
+    if (time > 600) {
+        chart.axis.max({x: dateString});
         chart.axis.tickFit(true);
         chart.axis.tickCount(9);
     }
     chart.flow({
         columns: [
-            ['signalTime', time],
+            ['signalTime', dateString],
             ['SpO2', spo2]
         ],
         duration: 0,
         to: toDateString(0),
     });
-    document.getElementById('current-time-display').innerHTML = time;
+    document.getElementById('current-time-display').innerHTML = dateString;
     document.getElementById('current-spo2-display').innerHTML = Math.round(spo2 * 100) + '%';
 }
-DataStreamer.prototype.flowNext = function() {
-    this.i = this.i + 1;
-    if (this.i == signalTimes.length - 1) {
-        return;
-    }
-    this.updateDisplay(signalTimes[this.i], SpO2Signal[this.i], 0);
-    setTimeout(this.flowNext.bind(this), this.delayInterval);
-}
-DataStreamer.prototype.startStreaming = function() {
-    this.flowNext();
-}
-var dataStreamer = new DataStreamer(500);
 
 var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
+    chart.unload({
+        ids: ['signalTime', 'SpO2']
+    });
     updateStatusConnected();
 })
 socket.on('disconnect', function(data) {
@@ -217,8 +202,26 @@ socket.on('disconnect', function(data) {
     updateStatusDisconnected();
 })
 socket.on('initialize', function(data) {
-    console.log('Sockets: Initializing.');
-    dataStreamer.startStreaming();
+    if (data === null) {
+        console.log('Sockets: Initializing.');
+        return;
+    } else {
+        console.log('Sockets: Initializing with previous data.');
+    }
+    var time = data.time.map(toDateString);
+    time.unshift('signalTime');
+    var spO2Signal = data.spo2;
+    spO2Signal.unshift('SpO2');
+    chart.load({
+        columns: [
+            time,
+            spO2Signal
+        ]
+    });
+});
+socket.on('update', function(data) {
+    //console.log('Sockets: Updating with sample at time ' + data.time);
+    updateDisplay(data.time, data.spo2, data.fio2);
 });
 </script>
 
