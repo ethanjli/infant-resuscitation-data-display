@@ -209,15 +209,15 @@ var dataStreamer = new DataStreamer(500);
 var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
+    console.log('Sockets: Connected to server.');
     updateStatusConnected();
 })
 socket.on('disconnect', function(data) {
+    console.log('Sockets: Disconnected from server.');
     updateStatusDisconnected();
 })
-socket.on('update', function(data) {
-    document.getElementById('current-time-display').innerHTML = data.time;
-    document.getElementById('current-spo2-display').innerHTML = Math.round(data.spo2 * 100) + '%';
-    document.getElementById('current-fio2-display').innerHTML = Math.round(data.fio2 * 100) + '%';
+socket.on('initialize', function(data) {
+    console.log('Sockets: Initializing.');
     dataStreamer.startStreaming();
 });
 </script>

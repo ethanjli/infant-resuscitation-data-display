@@ -12,7 +12,7 @@ server.listen(port, function() {
   console.log('Listening on port %d in %s mode', port, app.settings.env);
 });
 
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res) {
@@ -35,5 +35,6 @@ app.use(function(err, req, res, next) {
   next(err);
 });
 
-var sockets = require('./lib/sockets')
-socketio.on('connection', sockets.connection)
+var sensors = require('./lib/sensors');
+var sockets = require('./lib/sockets');
+socketio.on('connection', sockets.connection(sensors));
