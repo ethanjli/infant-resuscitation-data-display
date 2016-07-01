@@ -42,8 +42,8 @@
     line-height: 0.5;
 }
 .current-display-box {
-    margin-top: 80px;
-    margin-bottom: 80px;
+    margin-top: 40px;
+    margin-bottom: 40px;
 }
 </style>
 
@@ -60,8 +60,12 @@
                 <h2 id="current-time-display" class="current-display">00:00</h2>
             </div>
             <div class="row current-display-box">
-                <h1 class="current-display-label">SpO2:</h1>
-                <h2 id="current-sat-display" class="current-display">0%</h2>
+                <h1 class="current-display-label">SpO<sub>2</sub>:</h1>
+                <h2 id="current-spo2-display" class="current-display">0%</h2>
+            </div>
+            <div class="row current-display-box">
+                <h1 class="current-display-label">FiO<sub>2</sub>:</h1>
+                <h2 id="current-fio2-display" class="current-display">20%</h2>
             </div>
         </div>
     </div>
@@ -195,7 +199,7 @@ DataStreamer.prototype.flowChart = function() {
         duration: 0,
         to: toDateString(0),
     });
-    document.getElementById('current-sat-display').innerHTML = Math.round(SpO2Signal[this.i] * 100) + '%';
+    document.getElementById('current-spo2-display').innerHTML = Math.round(SpO2Signal[this.i] * 100) + '%';
     document.getElementById('current-time-display').innerHTML = signalTimes[this.i];
 }
 DataStreamer.prototype.flowNext = function() {
