@@ -222,6 +222,12 @@ socket.on('update', function(data) {
     //console.log('Sockets: Updating with sample at time ' + data.time);
     updateDisplay(data.time, data.spo2, data.fio2);
 });
+socket.on('reset', function(data) {
+    console.log('Sockets: Resetting data.');
+    chart.unload({
+        ids: ['signalTime', 'SpO2']
+    });
+});
 </script>
 
 </body>
