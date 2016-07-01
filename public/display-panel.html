@@ -168,7 +168,13 @@ var chart = c3.generate({
     }
 });
 
-function updateDisplay(time, spo2, fio2) {
+function setCurrentDisplay(time, spO2, fiO2) {
+    document.getElementById('current-time-display').innerHTML = toDateString(time);
+    document.getElementById('current-spo2-display').innerHTML = Math.round(spO2 * 100) + '%';
+    document.getElementById('current-fio2-display').innerHTML = Math.round(fiO2 * 100) + '%';
+}
+
+function updateDisplay(time, spO2, fiO2) {
     var dateString = toDateString(time);
     if (time > 600) {
         chart.axis.max({x: dateString});
@@ -178,13 +184,12 @@ function updateDisplay(time, spo2, fio2) {
     chart.flow({
         columns: [
             ['signalTime', dateString],
-            ['SpO2', spo2]
+            ['SpO2', spO2]
         ],
         duration: 0,
         to: toDateString(0),
     });
-    document.getElementById('current-time-display').innerHTML = dateString;
-    document.getElementById('current-spo2-display').innerHTML = Math.round(spo2 * 100) + '%';
+    setCurrentDisplay(time, spO2, fiO2);
 }
 
 var socket = io.connect(window.location.host);
@@ -194,6 +199,7 @@ socket.on('connect', function(data) {
     chart.unload({
         ids: ['signalTime', 'SpO2']
     });
+    document.getElementById('current-fio2-display').innerHTML = '0%';
     updateStatusConnected();
 })
 socket.on('disconnect', function(data) {
@@ -209,24 +215,27 @@ socket.on('initialize', function(data) {
     }
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
-    var spO2Signal = data.spo2;
+    var spO2Signal = data.spO2;
     spO2Signal.unshift('SpO2');
+    var fiO2 = data.fiO2;
     chart.load({
         columns: [
             time,
             spO2Signal
         ]
     });
+    setCurrentDisplay(time[time.length - 1], spO2Signal[spO2Signal.length - 1], fiO2);
 });
 socket.on('update', function(data) {
     //console.log('Sockets: Updating with sample at time ' + data.time);
-    updateDisplay(data.time, data.spo2, data.fio2);
+    updateDisplay(data.time, data.spO2, data.fiO2);
 });
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
     chart.unload({
         ids: ['signalTime', 'SpO2']
     });
+    setCurrentDisplay(data.time, data.spO2, data.fiO2);
 });
 </script>
 

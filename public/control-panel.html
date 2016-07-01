@@ -11,8 +11,8 @@
 
 <style>
 .vertical-center {
-    min-height: 100%;
-    min-height: 100vh;
+    min-height: 90%;
+    min-height: 90vh;
 
     display: flex;
     align-items: center;
@@ -25,10 +25,34 @@
 
 <div class="container">
     <div class="row vertical-center text-center">
-        <div class="col-md-8 col-md-offset-2 text-center">
+        <div class="col-md-12 text-center">
             <h1>Control Panel</h1>
-            <p><span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span></p>
-            <button id="btn-reset-simulation" class="btn btn-default btn-lg">Reset Simulation</button>
+            <div class="row">
+                <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span>
+                <hr>
+                <div class="col-md-3">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
+                        <div class="panel-body">
+                            <button id="btn-reset-simulation" class="btn btn-default">Reset Simulation</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><h3 class="panel-title">Oxygen</h3></div>
+                        <div class="panel-body form-horizontal">
+                            <div class="form-group">
+                                <label for="input-fio2" class="col-sm-5 control-label">FiO<sub>2</sub></label>
+                                <div class="input-group col-sm-5">
+                                    <input type="number" id="input-fio2" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                    <div class="input-group-addon">%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -64,6 +88,10 @@ function updateStatusDisplaysDisconnected() {
     statusElem.innerHTML = 'No display connected to server';
     statusElem.className = 'label label-warning';
 }
+function updateFiO2(fiO2) {
+    var fiO2Elem = document.getElementById('input-fio2');
+    fiO2Elem.value = Math.round(fiO2 * 100);
+}
 
 var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
@@ -89,10 +117,18 @@ socket.on('display-connection-info', function(data) {
         updateStatusDisplaysDisconnected();
     }
 });
+socket.on('fiO2', function(data) {
+    console.log('Sockets: Updating FiO2 level to ' + data + '.');
+    updateFiO2(data);
+});
 
 document.getElementById('btn-reset-simulation').onclick = function() {
     console.log('Sockets: Resetting.');
     socket.emit('reset');
+};
+document.getElementById('input-fio2').onchange = function() {
+    var fiO2Elem = document.getElementById('input-fio2');
+    socket.emit('fiO2', fiO2Elem.value / 100);
 };
 
 </script>
