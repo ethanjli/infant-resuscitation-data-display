@@ -106,7 +106,7 @@ var chart = c3.generate({
             targetLower: 'white',
             targetUpper: 'salmon',
             SpO2: 'darkred',
-            FiO2: 'black'
+            FiO2: 'dimgray'
         }
     },
     axis: {
@@ -241,6 +241,11 @@ socket.on('initialize', function(data) {
     spO2Signal.unshift('SpO2');
     var fiO2Signal = data.fiO2;
     fiO2Signal.unshift('FiO2');
+    if (data.time[data.time.length - 1] > 600) {
+        chart.axis.max({x: time[time.length - 1]});
+        chart.axis.tickFit(true);
+        chart.axis.tickCount(9);
+    }
     chart.load({
         columns: [
             time,

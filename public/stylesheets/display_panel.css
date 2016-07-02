@@ -17,9 +17,11 @@
 }
 #chart .c3-axis-y-label {
     font: 24px sans-serif;
+    fill: darkred;
 }
 #chart .c3-axis-y2-label {
     font: 24px sans-serif;
+    fill: dimgray;
 }
 #chart .tick {
     font: 20px sans-serif;
