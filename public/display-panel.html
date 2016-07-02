@@ -245,6 +245,9 @@ socket.on('initialize', function(data) {
         chart.axis.max({x: time[time.length - 1]});
         chart.axis.tickFit(true);
         chart.axis.tickCount(9);
+    } else {
+        chart.axis.max({x: 600});
+        chart.axis.tickFit(false);
     }
     chart.load({
         columns: [
