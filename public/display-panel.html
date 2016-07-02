@@ -78,7 +78,8 @@ var chart = c3.generate({
         xs: {
             targetUpper: 'targetTime',
             targetLower: 'targetTime',
-            SpO2: 'signalTime'
+            SpO2: 'signalTime',
+            FiO2: 'signalTime'
         },
         xFormat: '%M:%S',
         columns: [
@@ -86,23 +87,26 @@ var chart = c3.generate({
             ['targetUpper', 0.65, 0.85, 0.95, 0.95],
             ['targetLower', 0.6, 0.8, 0.85, 0.85],
             ['signalTime'],
-            ['SpO2']
+            ['SpO2'],
+            ['FiO2']
         ],
         types: {
             targetLower: 'area',
             targetUpper: 'area',
-            SpO2: 'line'
+            SpO2: 'line',
+            FiO2: 'line'
         },
         axes: {
             targetLower: 'y',
             targetUpper: 'y',
-            targetUpper: 'y2',
-            SpO2: 'y2'
+            SpO2: 'y',
+            FiO2: 'y2'
         },
         colors: {
             targetLower: 'white',
             targetUpper: 'salmon',
-            SpO2: 'black'
+            SpO2: 'darkred',
+            FiO2: 'black'
         }
     },
     axis: {
@@ -126,7 +130,7 @@ var chart = c3.generate({
         },
         y: {
             label: {
-                text: 'Saturation (%)',
+                text: 'SpO2 (%)',
                 position: 'outer-middle'
             },
             show: true,
@@ -139,7 +143,7 @@ var chart = c3.generate({
         },
         y2: {
             label: {
-                text: 'Saturation (%)',
+                text: 'FiO2 (%)',
                 position: 'outer-middle'
             },
             show: true,
@@ -184,7 +188,8 @@ function updateDisplay(time, spO2, fiO2) {
     chart.flow({
         columns: [
             ['signalTime', dateString],
-            ['SpO2', spO2]
+            ['SpO2', spO2],
+            ['FiO2', fiO2]
         ],
         duration: 0,
         to: toDateString(0),
@@ -213,26 +218,28 @@ socket.on('initialize', function(data) {
     } else {
         console.log('Sockets: Initializing with previous data.');
     }
-    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2);
+    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
     var spO2Signal = data.spO2;
     spO2Signal.unshift('SpO2');
+    var fiO2Signal = data.fiO2;
+    fiO2Signal.unshift('FiO2');
     chart.load({
         columns: [
             time,
-            spO2Signal
+            spO2Signal,
+            fiO2Signal
         ]
     });
 });
 socket.on('update', function(data) {
-    //console.log('Sockets: Updating with sample at time ' + data.time);
     updateDisplay(data.time, data.spO2, data.fiO2);
 });
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
     chart.unload({
-        ids: ['signalTime', 'SpO2']
+        ids: ['signalTime', 'SpO2', 'FiO2']
     });
     setCurrentDisplay(data.time, data.spO2, data.fiO2);
 });
