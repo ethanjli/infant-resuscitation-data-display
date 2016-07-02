@@ -30,7 +30,7 @@
             <div class="row">
                 <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span>
                 <hr>
-                <div class="col-md-3">
+                <div class="col-md-3 col-md-offset-3">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
                         <div class="panel-body">
@@ -94,6 +94,7 @@ function updateStatusDisplaysDisconnected() {
 function updateSimulationStarted() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Reset';
     pauseResumeBtn.disabled = '';
     pauseResumeBtn.innerHTML = 'Pause';
@@ -101,6 +102,7 @@ function updateSimulationStarted() {
 function updateSimulationReady() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Start';
     pauseResumeBtn.disabled = 'disabled';
     pauseResumeBtn.innerHTML = 'Pause';
@@ -108,6 +110,7 @@ function updateSimulationReady() {
 function updateSimulationPaused() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Reset';
     pauseResumeBtn.disabled = '';
     pauseResumeBtn.innerHTML = 'Resume';
@@ -169,20 +172,26 @@ socket.on('fiO2', function(data) {
 });
 
 document.getElementById('btn-startreset-simulation').onclick = function() {
-    var btn = document.getElementById('btn-startreset-simulation');
-    if (btn.innerHTML === 'Start') {
+    var startResetBtn = document.getElementById('btn-startreset-simulation');
+    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    if (startResetBtn.innerHTML === 'Start') {
         socket.emit('start');
-    } else if (btn.innerHTML === 'Reset') {
+    } else if (startResetBtn.innerHTML === 'Reset') {
         socket.emit('reset');
     }
+    startResetBtn.disabled = 'disabled';
+    pauseResumeBtn.disabled = 'disabled';
 };
 document.getElementById('btn-pauseresume-simulation').onclick = function() {
-    var btn = document.getElementById('btn-pauseresume-simulation');
-    if (btn.innerHTML === 'Pause') {
+    var startResetBtn = document.getElementById('btn-startreset-simulation');
+    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    if (pauseResumeBtn.innerHTML === 'Pause') {
         socket.emit('stop');
-    } else if (btn.innerHTML === 'Resume') {
+    } else if (pauseResumeBtn.innerHTML === 'Resume') {
         socket.emit('start');
     }
+    startResetBtn.disabled = 'disabled';
+    pauseResumeBtn.disabled = 'disabled';
 };
 document.getElementById('input-fio2').onchange = function() {
     var fiO2Elem = document.getElementById('input-fio2');
