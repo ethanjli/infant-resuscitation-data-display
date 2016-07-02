@@ -30,7 +30,7 @@
             <div class="row">
                 <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span>
                 <hr>
-                <div class="col-md-4 col-md-offset-2 col-sm-5 col-sm-offset-1">
+                <div class="col-md-4">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
                         <div class="panel-body">
@@ -41,24 +41,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-5">
+                <div class="col-md-4">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><h3 class="panel-title">Oxygen</h3></div>
+                        <div class="panel-heading"><h3 class="panel-title">Air Supply</h3></div>
                         <div class="panel-body form-horizontal">
-                            <div class="form-group">
-                                <label for="input-spo2" class="col-sm-6 control-label">SpO<sub>2</sub></label>
-                                <div class="input-group col-sm-5">
-                                    <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                    <div class="input-group-addon">%</div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="input-spo2-noise" class="col-sm-6 control-label">SpO<sub>2</sub> Noise</label>
-                                <div class="input-group col-sm-5">
-                                    <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                    <div class="input-group-addon">%</div>
-                                </div>
-                            </div>
                             <div class="form-group">
                                 <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
                                 <div class="input-group col-sm-5">
@@ -68,6 +54,29 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><h3 class="panel-title">Oxygen</h3></div>
+                        <div class="panel-body form-horizontal">
+                            <div class="form-group">
+                                <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-spo2" class="col-sm-5 control-label">SpO<sub>2</sub></label>
+                                <div class="input-group col-sm-5">
+                                    <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                    <div class="input-group-addon">%</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-spo2-noise" class="col-sm-5 control-label">SpO<sub>2</sub> Noise</label>
+                                <div class="input-group col-sm-5">
+                                    <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                    <div class="input-group-addon">%</div>
+                                </div>
+                            </div>
+                        </div>
                 </div>
             </div>
         </div>
@@ -129,6 +138,14 @@ function updateSimulationPaused() {
     pauseResumeBtn.disabled = '';
     pauseResumeBtn.innerHTML = 'Resume';
 }
+function updateSensorConnection(sensorConnection) {
+    var sensorConnectionElem = document.getElementById('btn-connectdisconnect-sensors');
+    if (sensorConnection) {
+        sensorConnectionElem.innerHTML = 'Disconnect Sensors';
+    } else {
+        sensorConnectionElem.innerHTML = 'Connect Sensors';
+    }
+}
 function updateSpO2(spO2) {
     var spO2Elem = document.getElementById('input-spo2');
     spO2Elem.value = Math.round(spO2 * 100);
@@ -188,6 +205,14 @@ socket.on('stop', function(data) {
     console.log('Sockets: Stopping simuluation.');
     updateSimulationPaused();
 });
+socket.on('sensor-connection', function(data) {
+    if (data) {
+        console.log('Sockets: Connecting sensors');
+    } else {
+        console.log('Sockets: Disconnecting sensors');
+    }
+    updateSensorConnection(data);
+});
 socket.on('spO2', function(data) {
     console.log('Sockets: Updating SpO2 level to ' + data + '.');
     updateSpO2(data);
@@ -222,6 +247,15 @@ document.getElementById('btn-pauseresume-simulation').onclick = function() {
     }
     startResetBtn.disabled = 'disabled';
     pauseResumeBtn.disabled = 'disabled';
+};
+document.getElementById('btn-connectdisconnect-sensors').onclick = function() {
+    var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
+    if (sensorsBtn.innerHTML === 'Connect Sensors') {
+        socket.emit('sensor-connection', true);
+    } else if (sensorsBtn.innerHTML === 'Disconnect Sensors') {
+        socket.emit('sensor-connection', false);
+    }
+    sensorsBtn.disabled = 'disabled';
 };
 document.getElementById('input-spo2').onchange = function() {
     var spO2Elem = document.getElementById('input-spo2');
