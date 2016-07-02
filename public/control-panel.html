@@ -30,7 +30,7 @@
             <div class="row">
                 <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span>
                 <hr>
-                <div class="col-md-3 col-md-offset-3">
+                <div class="col-md-4 col-md-offset-2 col-sm-5 col-sm-offset-1">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
                         <div class="panel-body">
@@ -41,12 +41,26 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4 col-sm-5">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Oxygen</h3></div>
                         <div class="panel-body form-horizontal">
                             <div class="form-group">
-                                <label for="input-fio2" class="col-sm-5 control-label">FiO<sub>2</sub></label>
+                                <label for="input-spo2" class="col-sm-6 control-label">SpO<sub>2</sub></label>
+                                <div class="input-group col-sm-5">
+                                    <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                    <div class="input-group-addon">%</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-spo2-noise" class="col-sm-6 control-label">SpO<sub>2</sub> Noise</label>
+                                <div class="input-group col-sm-5">
+                                    <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                    <div class="input-group-addon">%</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
                                 <div class="input-group col-sm-5">
                                     <input type="number" id="input-fio2" class="form-control" placeholder="0" min="0" max="100" step="1">
                                     <div class="input-group-addon">%</div>
@@ -115,6 +129,14 @@ function updateSimulationPaused() {
     pauseResumeBtn.disabled = '';
     pauseResumeBtn.innerHTML = 'Resume';
 }
+function updateSpO2(spO2) {
+    var spO2Elem = document.getElementById('input-spo2');
+    spO2Elem.value = Math.round(spO2 * 100);
+}
+function updateSpO2Noise(spO2Noise) {
+    var spO2NoiseElem = document.getElementById('input-spo2-noise');
+    spO2NoiseElem.value = Math.round(spO2Noise * 100);
+}
 function updateFiO2(fiO2) {
     var fiO2Elem = document.getElementById('input-fio2');
     fiO2Elem.value = Math.round(fiO2 * 100);
@@ -166,6 +188,14 @@ socket.on('stop', function(data) {
     console.log('Sockets: Stopping simuluation.');
     updateSimulationPaused();
 });
+socket.on('spO2', function(data) {
+    console.log('Sockets: Updating SpO2 level to ' + data + '.');
+    updateSpO2(data);
+});
+socket.on('spO2-noise', function(data) {
+    console.log('Sockets: Updating SpO2 noise range to +/- ' + data + '.');
+    updateSpO2Noise(data);
+});
 socket.on('fiO2', function(data) {
     console.log('Sockets: Updating FiO2 level to ' + data + '.');
     updateFiO2(data);
@@ -192,6 +222,14 @@ document.getElementById('btn-pauseresume-simulation').onclick = function() {
     }
     startResetBtn.disabled = 'disabled';
     pauseResumeBtn.disabled = 'disabled';
+};
+document.getElementById('input-spo2').onchange = function() {
+    var spO2Elem = document.getElementById('input-spo2');
+    socket.emit('spO2', spO2Elem.value / 100);
+};
+document.getElementById('input-spo2-noise').onchange = function() {
+    var spO2NoiseElem = document.getElementById('input-spo2-noise');
+    socket.emit('spO2-noise', spO2NoiseElem.value / 100);
 };
 document.getElementById('input-fio2').onchange = function() {
     var fiO2Elem = document.getElementById('input-fio2');
