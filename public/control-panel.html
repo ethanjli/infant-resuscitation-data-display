@@ -34,7 +34,10 @@
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
                         <div class="panel-body">
-                            <button id="btn-reset-simulation" class="btn btn-default">Reset Simulation</button>
+                            <div class="btn-group" role="group">
+                                <button type="button" id="btn-startreset-simulation" class="btn btn-default">Start</button>
+                                <button type="button" id="btn-pauseresume-simulation" class="btn btn-default">Pause</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -88,6 +91,27 @@ function updateStatusDisplaysDisconnected() {
     statusElem.innerHTML = 'No display connected to server';
     statusElem.className = 'label label-warning';
 }
+function updateSimulationStarted() {
+    var startResetBtn = document.getElementById('btn-startreset-simulation');
+    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    startResetBtn.innerHTML = 'Reset';
+    pauseResumeBtn.disabled = '';
+    pauseResumeBtn.innerHTML = 'Pause';
+}
+function updateSimulationReady() {
+    var startResetBtn = document.getElementById('btn-startreset-simulation');
+    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    startResetBtn.innerHTML = 'Start';
+    pauseResumeBtn.disabled = 'disabled';
+    pauseResumeBtn.innerHTML = 'Pause';
+}
+function updateSimulationPaused() {
+    var startResetBtn = document.getElementById('btn-startreset-simulation');
+    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    startResetBtn.innerHTML = 'Reset';
+    pauseResumeBtn.disabled = '';
+    pauseResumeBtn.innerHTML = 'Resume';
+}
 function updateFiO2(fiO2) {
     var fiO2Elem = document.getElementById('input-fio2');
     fiO2Elem.value = Math.round(fiO2 * 100);
@@ -117,14 +141,48 @@ socket.on('display-connection-info', function(data) {
         updateStatusDisplaysDisconnected();
     }
 });
+socket.on('simulation-state-info', function(data) {
+    console.log('Sockets: Simulation state is: ' + data);
+    if (data === 'ready') {
+        updateSimulationReady();
+    } else if (data === 'running') {
+        updateSimulationStarted();
+    } else if (data === 'stopped') {
+        updateSimulationPaused();
+    }
+});
+socket.on('start', function(data) {
+    console.log('Sockets: Starting simulation.');
+    updateSimulationStarted();
+});
+socket.on('reset', function(data) {
+    console.log('Sockets: Resetting simuluation.');
+    updateSimulationReady();
+});
+socket.on('stop', function(data) {
+    console.log('Sockets: Stopping simuluation.');
+    updateSimulationPaused();
+});
 socket.on('fiO2', function(data) {
     console.log('Sockets: Updating FiO2 level to ' + data + '.');
     updateFiO2(data);
 });
 
-document.getElementById('btn-reset-simulation').onclick = function() {
-    console.log('Sockets: Resetting.');
-    socket.emit('reset');
+document.getElementById('btn-startreset-simulation').onclick = function() {
+    var btn = document.getElementById('btn-startreset-simulation');
+    if (btn.innerHTML === 'Start') {
+        socket.emit('start');
+    } else if (btn.innerHTML === 'Reset') {
+        socket.emit('reset');
+    }
+};
+document.getElementById('btn-pauseresume-simulation').onclick = function() {
+    var btn = document.getElementById('btn-pauseresume-simulation');
+    if (btn.innerHTML === 'Pause') {
+        socket.emit('stop');
+    } else if (btn.innerHTML === 'Resume') {
+        socket.emit('start');
+    }
 };
 document.getElementById('input-fio2').onchange = function() {
     var fiO2Elem = document.getElementById('input-fio2');
