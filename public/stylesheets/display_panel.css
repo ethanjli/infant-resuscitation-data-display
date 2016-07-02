@@ -42,6 +42,12 @@
     font-weight: bold;
     line-height: 0.5;
 }
+#current-spo2-display{
+    color: darkred;
+}
+#current-fio2-display{
+    color: dimgray;
+}
 .current-display-box {
     margin-top: -20px;
     margin-bottom: 60px;
