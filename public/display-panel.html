@@ -218,7 +218,7 @@ socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
     chart.unload({
-        ids: ['signalTime', 'SpO2']
+        ids: ['signalTime', 'SpO2', 'FiO2']
     });
     document.getElementById('current-fio2-display').innerHTML = '0%';
     updateStatusConnected();
