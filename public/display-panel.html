@@ -169,6 +169,9 @@ var chart = c3.generate({
         left: 100,
         right: 100,
         bottom: 40
+    },
+    transition: {
+        duration: 0
     }
 });
 
@@ -252,6 +255,7 @@ socket.on('initialize', function(data) {
     } else {
         chart.axis.max({x: toDateString(600)});
         chart.axis.tickFit(false);
+        chart.axis.tickCount(10);
     }
     chart.load({
         columns: [
@@ -266,11 +270,12 @@ socket.on('update', function(data) {
 });
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
+    chart.axis.max({x: toDateString(600)});
     chart.unload({
         ids: ['signalTime', 'SpO2', 'FiO2']
     });
-    chart.axis.max({x: toDateString(600)});
     chart.axis.tickFit(false);
+    chart.axis.tickCount(10);
     setCurrentDisplay(data.time, data.spO2, data.fiO2);
 });
 </script>
