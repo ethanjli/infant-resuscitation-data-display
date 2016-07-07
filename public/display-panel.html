@@ -191,7 +191,6 @@ function setCurrentDisplay(time, spO2, fiO2) {
 function updateDisplay(time, spO2, fiO2) {
     var dateString = toDateString(time);
     if (time > 600) {
-        chart.axis.max({x: dateString});
         chart.axis.tickFit(true);
         chart.axis.tickCount(9);
     }
@@ -209,6 +208,11 @@ function updateDisplay(time, spO2, fiO2) {
         ],
         duration: 0,
         to: toDateString(0),
+        done: function() {
+            if (time > 600) {
+                chart.axis.max({x: toDateString(Math.ceil(time / 60) * 60)});
+            }
+        }
     });
     setCurrentDisplay(time, spO2, fiO2);
 }
