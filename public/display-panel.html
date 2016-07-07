@@ -246,7 +246,7 @@ socket.on('initialize', function(data) {
         chart.axis.tickFit(true);
         chart.axis.tickCount(9);
     } else {
-        chart.axis.max({x: 600});
+        chart.axis.max({x: toDateString(600)});
         chart.axis.tickFit(false);
     }
     chart.load({
@@ -265,6 +265,8 @@ socket.on('reset', function(data) {
     chart.unload({
         ids: ['signalTime', 'SpO2', 'FiO2']
     });
+    chart.axis.max({x: toDateString(600)});
+    chart.axis.tickFit(false);
     setCurrentDisplay(data.time, data.spO2, data.fiO2);
 });
 </script>

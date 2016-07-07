@@ -139,12 +139,13 @@ function updateSimulationPaused() {
     pauseResumeBtn.innerHTML = 'Resume';
 }
 function updateSensorConnection(sensorConnection) {
-    var sensorConnectionElem = document.getElementById('btn-connectdisconnect-sensors');
+    var sensorConnectionBtn = document.getElementById('btn-connectdisconnect-sensors');
     if (sensorConnection) {
-        sensorConnectionElem.innerHTML = 'Disconnect Sensors';
+        sensorConnectionBtn.innerHTML = 'Disconnect Sensors';
     } else {
-        sensorConnectionElem.innerHTML = 'Connect Sensors';
+        sensorConnectionBtn.innerHTML = 'Connect Sensors';
     }
+    sensorConnectionBtn.disabled = '';
 }
 function updateSpO2(spO2) {
     var spO2Elem = document.getElementById('input-spo2');
