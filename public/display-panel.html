@@ -128,7 +128,7 @@ var chart = c3.generate({
                 format: '%M:%S',
                 fit: false,
                 culling: {
-                    max: 10
+                    max: 11
                 }
             },
             min: toDateString(0),
@@ -198,7 +198,7 @@ function updateDisplay(time, spO2, fiO2) {
     var dateString = toDateString(time);
     if (time > 600) {
         chart.axis.tickFit(true);
-        chart.axis.tickCount(9);
+        chart.axis.tickCount(11);
     }
     if (spO2 === null) {
         spO2 = NaN;
@@ -228,15 +228,9 @@ socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
     chart.unload({
-        ids: ['signalTime', 'SpO2', 'FiO2']
+        ids: ['signalTime', 'SpO2', 'FiO2'],
+        done: updateStatusConnected
     });
-    chart.axis.max({x: toDateString(600)});
-    chart.axis.tickFit(false);
-    chart.axis.tickCount(10);
-    document.getElementById('current-time-display').innerHTML = '00:00';
-    document.getElementById('current-spo2-display').innerHTML = '???';
-    updateFiO2(0);
-    updateStatusConnected();
 })
 socket.on('disconnect', function(data) {
     console.log('Sockets: Disconnected from server.');
@@ -245,6 +239,10 @@ socket.on('disconnect', function(data) {
 socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');
+        chart.axis.max({x: toDateString(600)});
+        document.getElementById('current-time-display').innerHTML = '00:00';
+        document.getElementById('current-spo2-display').innerHTML = '???';
+        updateFiO2(0);
         return;
     } else {
         console.log('Sockets: Initializing with previous data.');
@@ -259,11 +257,11 @@ socket.on('initialize', function(data) {
     if (data.time[data.time.length - 1] > 600) {
         chart.axis.max({x: time[time.length - 1]});
         chart.axis.tickFit(true);
-        chart.axis.tickCount(9);
+        chart.axis.tickCount(11);
     } else {
         chart.axis.max({x: toDateString(600)});
         chart.axis.tickFit(false);
-        chart.axis.tickCount(10);
+        chart.axis.tickCount(11);
     }
     chart.load({
         columns: [
@@ -278,13 +276,23 @@ socket.on('update', function(data) {
 });
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
-    chart.axis.max({x: toDateString(600)});
     chart.unload({
-        ids: ['signalTime', 'SpO2', 'FiO2']
+        ids: ['signalTime', 'SpO2', 'FiO2'],
+        done: function() {
+            chart.flow({
+                columns: [
+                    ['signalTime', toDateString(data.time)],
+                    ['SpO2', data.spO2],
+                    ['FiO2', data.fiO2]
+                ], done: function() {
+                    chart.axis.max({x: toDateString(600)});
+                    chart.axis.tickFit(false);
+                    chart.axis.tickCount(11);
+                    setCurrentDisplay(data.time, data.spO2, data.fiO2);
+                }
+            });
+        }
     });
-    chart.axis.tickFit(false);
-    chart.axis.tickCount(10);
-    setCurrentDisplay(data.time, data.spO2, data.fiO2);
 });
 socket.on('fiO2', function(data) {
     console.log('Sockets: Updating FiO2 level to ' + data + '.');
