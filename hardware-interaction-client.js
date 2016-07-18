@@ -32,10 +32,10 @@ board.on('ready', function() {
     if (socket.connected) {
       var newFiO2 = (1 - this.value / 1023).toFixed(2);
       if (fiO2 !== newFiO2) {
-        fiO2 = newFiO2;
-        console.log(fiO2);
-        socket.emit('fiO2', fiO2);
+        console.log(newFiO2);
       }
+      fiO2 = newFiO2;
+      socket.emit('fiO2', fiO2);
     }
   });
 })
