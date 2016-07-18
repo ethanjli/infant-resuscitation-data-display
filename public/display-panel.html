@@ -227,10 +227,12 @@ var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
-    chart.axis.max({x: toDateString(600)});
     chart.unload({
         ids: ['signalTime', 'SpO2', 'FiO2']
     });
+    chart.axis.max({x: toDateString(600)});
+    chart.axis.tickFit(false);
+    chart.axis.tickCount(10);
     document.getElementById('current-time-display').innerHTML = '00:00';
     document.getElementById('current-spo2-display').innerHTML = '???';
     updateFiO2(0);
