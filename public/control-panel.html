@@ -28,7 +28,7 @@
         <div class="col-md-12 text-center">
             <h1>Control Panel</h1>
             <div class="row">
-                <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span>
+                <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span> <span id="status-hardware" class="label label-warning">No hardware interfaces connected to server</span>
                 <hr>
                 <div class="col-md-4">
                     <div class="panel panel-default">
@@ -114,6 +114,24 @@ function updateStatusDisplaysDisconnected() {
     statusElem.innerHTML = 'No display connected to server';
     statusElem.className = 'label label-warning';
 }
+function updateStatusHardwareConnected(numDisplays) {
+    var statusElem = document.getElementById('status-hardware');
+    var fiO2Elem = document.getElementById('input-fio2');
+    if (numDisplays > 1) {
+        statusElem.innerHTML = numDisplays + ' hardware interfaces connected to server';
+    } else if (numDisplays === 1) {
+        statusElem.innerHTML = 'Hardware interface connected to server';
+    }
+    fiO2Elem.setAttribute('readonly', 'readonly');
+    statusElem.className = 'label label-success';
+}
+function updateStatusHardwareDisconnected() {
+    var statusElem = document.getElementById('status-hardware');
+    var fiO2Elem = document.getElementById('input-fio2');
+    statusElem.innerHTML = 'No hardware interface connected to server';
+    statusElem.className = 'label label-warning';
+    fiO2Elem.removeAttribute('readonly');
+}
 function updateSimulationStarted() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
@@ -182,6 +200,13 @@ socket.on('display-connection-info', function(data) {
         updateStatusDisplaysConnected(data);
     } else {
         updateStatusDisplaysDisconnected();
+    }
+});
+socket.on('hardware-connection-info', function(data) {
+    if (data > 0) {
+        updateStatusHardwareConnected(data);
+    } else {
+        updateStatusHardwareDisconnected();
     }
 });
 socket.on('simulation-state-info', function(data) {

@@ -57,6 +57,14 @@ function updateStatusDisconnected() {
     statusElem.className = 'label label-danger';
     statusElem.style.visibility = 'visible';
 }
+function updateFiO2(fiO2) {
+    if (fiO2 === null || isNaN(fiO2)) {
+        fiO2 = '0%';
+    } else {
+        fiO2 = Math.round(fiO2 * 100) + '%'
+    }
+    document.getElementById('current-fio2-display').innerHTML = fiO2;
+}
 
 function toDateString(totalSeconds) {
     var minutes = parseInt(totalSeconds / 60) % 60;
@@ -182,13 +190,8 @@ function setCurrentDisplay(time, spO2, fiO2) {
     } else {
         spO2 = Math.round(spO2 * 100) + '%'
     }
-    if (fiO2 === null || isNaN(fiO2)) {
-        fiO2 = '0%';
-    } else {
-        fiO2 = Math.round(fiO2 * 100) + '%'
-    }
     document.getElementById('current-spo2-display').innerHTML = spO2;
-    document.getElementById('current-fio2-display').innerHTML = fiO2;
+    updateFiO2(fiO2);
 }
 
 function updateDisplay(time, spO2, fiO2) {
@@ -224,10 +227,13 @@ var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
+    chart.axis.max({x: toDateString(600)});
     chart.unload({
         ids: ['signalTime', 'SpO2', 'FiO2']
     });
-    document.getElementById('current-fio2-display').innerHTML = '0%';
+    document.getElementById('current-time-display').innerHTML = '00:00';
+    document.getElementById('current-spo2-display').innerHTML = '???';
+    updateFiO2(0);
     updateStatusConnected();
 })
 socket.on('disconnect', function(data) {
@@ -278,6 +284,10 @@ socket.on('reset', function(data) {
     chart.axis.tickCount(10);
     setCurrentDisplay(data.time, data.spO2, data.fiO2);
 });
+socket.on('fiO2', function(data) {
+    console.log('Sockets: Updating FiO2 level to ' + data + '.');
+    updateFiO2(data);
+})
 </script>
 
 </body>
