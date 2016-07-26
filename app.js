@@ -42,6 +42,6 @@ app.use(function(err, req, res, next) {
 });
 
 var sensors = require('./lib/sensors');
-var streaming = require('./lib/streaming')(socketio, 1000, sensors);
+var streaming = require('./lib/streaming')(socketio, 2000, sensors);
 var sockets = require('./lib/sockets')(streaming);
 socketio.on('connection', sockets.connection);
