@@ -22,7 +22,7 @@
 
 <div class="container-fluid">
     <div class="row vertical-center">
-        <div id="chart" class="col-md-9"></div>
+        <div id="chart" class="col-md-9 col-sm-9 col-xs-9"></div>
         <div id="current-display" class="col-md-1 col-md-offset-1">
             <div class="row current-display-box">
                 <h1 class="current-display-label">Time:</h1>
@@ -104,12 +104,6 @@ var chart = c3.generate({
             SpO2: 'line',
             FiO2: 'line'
         },
-        axes: {
-            targetLower: 'y',
-            targetUpper: 'y',
-            SpO2: 'y',
-            FiO2: 'y2'
-        },
         colors: {
             targetLower: 'white',
             targetUpper: 'salmon',
@@ -138,20 +132,7 @@ var chart = c3.generate({
         },
         y: {
             label: {
-                text: 'SpO2 (%)',
-                position: 'outer-middle'
-            },
-            show: true,
-            tick: {
-                format: d3.format('%')
-            },
-            min: 0,
-            max: 1,
-            padding: 0
-        },
-        y2: {
-            label: {
-                text: 'FiO2 (%)',
+                text: 'SpO2, FiO2 (%)',
                 position: 'outer-middle'
             },
             show: true,
@@ -175,7 +156,7 @@ var chart = c3.generate({
     padding: {
         top: 20,
         left: 100,
-        right: 100,
+        right: 40,
         bottom: 40
     },
     transition: {
