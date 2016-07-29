@@ -125,6 +125,7 @@ socket.on('tick', function(time) {
     document.getElementById('current-time-display').innerHTML = toDateString(time);
 });
 socket.on('reset', function(data) {
+    setCurrentDisplay(data.time, data.spO2, data.fiO2);
     console.log('Sockets: Resetting data.');
 });
 </script>
