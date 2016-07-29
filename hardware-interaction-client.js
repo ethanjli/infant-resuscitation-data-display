@@ -23,6 +23,10 @@ socket.on('echo', function(data) {
 var board = new five.Board();
 var fiO2 = null
 
+function rescale(value, fromLow, fromHigh, toLow, toHigh) {
+  return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
+}
+
 board.on('ready', function() {
   var fiO2Knob = new five.Sensor({
     pin: 'A0',
@@ -30,7 +34,7 @@ board.on('ready', function() {
   });
   fiO2Knob.on('data', function() {
     if (socket.connected) {
-      var newFiO2 = (1 - this.value / 1023).toFixed(2);
+      var newFiO2 = rescale(this.value, 0, 1023, 1, 0.21).toFixed(2);
       if (fiO2 !== newFiO2) {
         console.log(newFiO2);
       }
