@@ -17,11 +17,6 @@
 }
 #chart .c3-axis-y-label {
     font: 24px sans-serif;
-    fill: darkred;
-}
-#chart .c3-axis-y2-label {
-    font: 24px sans-serif;
-    fill: dimgray;
 }
 #chart .tick {
     font: 20px sans-serif;
@@ -31,10 +26,10 @@
     stroke-width: 0px;
 }
 #chart .c3-line-SpO2 {
-    stroke-width: 2px;
+    stroke-width: 3px;
 }
 #chart .c3-line-FiO2 {
-    stroke-width: 2px;
+    stroke-width: 3px;
 }
 
 .current-display {
@@ -43,7 +38,7 @@
     line-height: 0.5;
 }
 #current-spo2-display{
-    color: darkred;
+    color: #175e54;
 }
 #current-fio2-display{
     color: dimgray;
