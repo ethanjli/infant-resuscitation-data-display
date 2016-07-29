@@ -26,7 +26,7 @@ h1, h2, h3 {
 }
 
 #chart .c3-axis {
-    stroke-width: 2px;
+    stroke-width: 3px;
     color: white;
 }
 #chart .c3-axis-x-label {
@@ -46,10 +46,10 @@ h1, h2, h3 {
     stroke-width: 0px;
 }
 #chart .c3-line-SpO2 {
-    stroke-width: 3px;
+    stroke-width: 5px;
 }
 #chart .c3-line-FiO2 {
-    stroke-width: 3px;
+    stroke-width: 5px;
 }
 .c3-ygrid-line-hidden {
     stroke-width: 0px;
