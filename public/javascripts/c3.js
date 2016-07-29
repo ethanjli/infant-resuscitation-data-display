@@ -1563,6 +1563,10 @@
         domain = [yDomainMin - padding_bottom, yDomainMax + padding_top];
         return isInverted ? domain.reverse() : domain;
     };
+    c3_chart_internal_fn.getAxisPadding = function (padding, key, defaultValue, all) {
+        var ratio = padding.unit === 'ratio' ? all : 1;
+        return isValue(padding[key]) ? padding[key] * ratio : defaultValue;
+    };
     c3_chart_internal_fn.getXDomainMin = function (targets) {
         var $$ = this, config = $$.config;
         return isDefined(config.axis_x_min) ?
@@ -1588,8 +1592,8 @@
             padding = diff * 0.01;
         }
         if (typeof config.axis_x_padding === 'object' && notEmpty(config.axis_x_padding)) {
-            paddingLeft = isValue(config.axis_x_padding.left) ? config.axis_x_padding.left : padding;
-            paddingRight = isValue(config.axis_x_padding.right) ? config.axis_x_padding.right : padding;
+            paddingLeft = c3_chart_internal_fn.getAxisPadding(config.axis_x_padding, 'left', padding, diff);
+            paddingRight = c3_chart_internal_fn.getAxisPadding(config.axis_x_padding, 'right', padding, diff);
         } else if (typeof config.axis_x_padding === 'number') {
             paddingLeft = paddingRight = config.axis_x_padding;
         } else {

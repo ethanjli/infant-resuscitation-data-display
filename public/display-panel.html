@@ -106,7 +106,7 @@ var chart = c3.generate({
         },
         colors: {
             targetLower: 'white',
-            targetUpper: '#009B76',
+            targetUpper: '#00BA86',
             SpO2: '#175E54',
             FiO2: 'dimgray'
         }
@@ -127,7 +127,11 @@ var chart = c3.generate({
             },
             min: toDateString(0),
             max: toDateString(600),
-            padding: 0,
+            padding: {
+                left: 0,
+                right: 0.09,
+                unit: 'ratio'
+            },
             height: 60
         },
         y: {
@@ -180,6 +184,7 @@ function updateDisplay(time, spO2, fiO2) {
     if (time > 600) {
         chart.axis.tickFit(true);
         chart.axis.tickCount(11);
+        $("#chart .c3-ygrid-line").addClass('c3-ygrid-line-hidden');
     }
     if (spO2 === null) {
         spO2 = NaN;
@@ -198,6 +203,17 @@ function updateDisplay(time, spO2, fiO2) {
         done: function() {
             if (time > 600) {
                 chart.axis.max({x: toDateString(Math.ceil(time / 60) * 60)});
+            }
+            if (!isNaN(spO2) && !isNaN(fiO2)) {
+                var annotationDeltaY = 0;
+                if (time > 600) {
+                    annotationDeltaY = -0.02;
+                }
+                chart.ygrids([
+                    {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
+                    {value: spO2 + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+                    {value: fiO2 + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+                ]);
             }
         }
     });
@@ -235,15 +251,25 @@ socket.on('initialize', function(data) {
     spO2Signal.unshift('SpO2');
     var fiO2Signal = data.fiO2;
     fiO2Signal.unshift('FiO2');
+    var annotationDeltaY = 0;
     if (data.time[data.time.length - 1] > 600) {
         chart.axis.max({x: time[time.length - 1]});
         chart.axis.tickFit(true);
         chart.axis.tickCount(11);
+        $("#chart .c3-ygrid-line.spO2-label").addClass('c3-ygrid-line-hidden');
+        $("#chart .c3-ygrid-line.fiO2-label").addClass('c3-ygrid-line-hidden');
+        annotationDeltaY = -0.02;
     } else {
         chart.axis.max({x: toDateString(600)});
         chart.axis.tickFit(false);
         chart.axis.tickCount(11);
     }
+    chart.ygrids([
+        {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
+        {value: data.spO2[data.spO2.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+        {value: data.fiO2[data.fiO2.length - 1] + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+    ]);
+    $("#chart .c3-ygrid-line.spO2-target-label").addClass('c3-ygrid-line-hidden');
     chart.load({
         columns: [
             time,
@@ -273,6 +299,9 @@ socket.on('reset', function(data) {
                     chart.axis.tickFit(false);
                     chart.axis.tickCount(11);
                     setCurrentDisplay(data.time, data.spO2, data.fiO2);
+                    chart.ygrids([
+                        {value: 0.87, text: 'SpO2 Target', class: 'spO2-target-label'},
+                    ]);
                 }
             });
         }
