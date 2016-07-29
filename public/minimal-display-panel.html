@@ -55,14 +55,6 @@ function updateStatusDisconnected() {
     statusElem.className = 'label label-danger';
     statusElem.style.visibility = 'visible';
 }
-function updateFiO2(fiO2) {
-    if (fiO2 === null || isNaN(fiO2)) {
-        fiO2 = '0%';
-    } else {
-        fiO2 = Math.round(fiO2 * 100) + '%'
-    }
-    document.getElementById('current-fio2-display').innerHTML = fiO2;
-}
 
 function toDateString(totalSeconds) {
     var minutes = parseInt(totalSeconds / 60) % 60;
@@ -82,7 +74,6 @@ function setCurrentDisplay(time, spO2, fiO2, hr) {
         spO2 = Math.round(spO2 * 100) + '%'
     }
     document.getElementById('current-spo2-display').innerHTML = spO2;
-    updateFiO2(fiO2);
     if (hr === null || isNaN(hr)) {
         hr = '???';
     } else {
@@ -95,9 +86,6 @@ function updateDisplay(time, spO2, fiO2, hr) {
     var dateString = toDateString(time);
     if (spO2 === null) {
         spO2 = NaN;
-    }
-    if (fiO2 === null) {
-        fiO2 = NaN;
     }
     if (hr === null) {
         hr = NaN;
@@ -120,7 +108,6 @@ socket.on('initialize', function(data) {
         console.log('Sockets: Initializing.');
         document.getElementById('current-time-display').innerHTML = '00:00';
         document.getElementById('current-spo2-display').innerHTML = '???';
-        updateFiO2(0);
         return;
     } else {
         console.log('Sockets: Initializing with previous data.');
@@ -130,8 +117,6 @@ socket.on('initialize', function(data) {
     time.unshift('signalTime');
     var spO2Signal = data.spO2;
     spO2Signal.unshift('SpO2');
-    var fiO2Signal = data.fiO2;
-    fiO2Signal.unshift('FiO2');
 });
 socket.on('update', function(data) {
     updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
@@ -142,10 +127,6 @@ socket.on('tick', function(time) {
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
 });
-socket.on('fiO2', function(data) {
-    console.log('Sockets: Updating FiO2 level to ' + data + '.');
-    updateFiO2(data);
-})
 </script>
 
 </body>
