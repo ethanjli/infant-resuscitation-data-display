@@ -90,7 +90,7 @@ function setCurrentDisplay(time, spO2, fiO2, hr) {
     if (hr === null || isNaN(hr)) {
         hr = '???';
     } else {
-        hr = Math.round(hr) + 'bpm'
+        hr = Math.round(hr)
     }
     document.getElementById('current-hr-display').innerHTML = hr;
 }

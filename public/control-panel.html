@@ -187,6 +187,10 @@ function updateFiO2(fiO2) {
     var fiO2Elem = document.getElementById('input-fio2');
     fiO2Elem.value = Math.round(fiO2 * 100);
 }
+function updateHR(hr) {
+    var hrElem = document.getElementById('input-hr');
+    hrElem.value = hr;
+}
 
 var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
@@ -261,6 +265,10 @@ socket.on('fiO2', function(data) {
     console.log('Sockets: Updating FiO2 level to ' + data + '.');
     updateFiO2(data);
 });
+socket.on('hr', function(data) {
+    console.log('Sockets: Updating HR to ' + data + '.');
+    updateHR(data);
+});
 
 document.getElementById('btn-startreset-simulation').onclick = function() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
@@ -304,6 +312,10 @@ document.getElementById('input-spo2-noise').onchange = function() {
 document.getElementById('input-fio2').onchange = function() {
     var fiO2Elem = document.getElementById('input-fio2');
     socket.emit('fiO2', fiO2Elem.value / 100);
+};
+document.getElementById('input-hr').onchange = function() {
+    var hrElem = document.getElementById('input-hr');
+    socket.emit('hr', hrElem.value);
 };
 
 </script>
