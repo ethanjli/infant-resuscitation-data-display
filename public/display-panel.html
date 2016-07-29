@@ -29,6 +29,10 @@
                 <h2 id="current-time-display" class="current-display">00:00</h2>
             </div>
             <div class="row current-display-box">
+                <h1 class="current-display-label">HR:</h1>
+                <h2 id="current-hr-display" class="current-display">???</h2>
+            </div>
+            <div class="row current-display-box">
                 <h1 class="current-display-label">SpO<sub>2</sub>:</h1>
                 <h2 id="current-spo2-display" class="current-display">???</h2>
             </div>
@@ -168,7 +172,7 @@ var chart = c3.generate({
     }
 });
 
-function setCurrentDisplay(time, spO2, fiO2) {
+function setCurrentDisplay(time, spO2, fiO2, hr) {
     document.getElementById('current-time-display').innerHTML = toDateString(time);
     if (spO2 === null || isNaN(spO2)) {
         spO2 = '???';
@@ -177,9 +181,15 @@ function setCurrentDisplay(time, spO2, fiO2) {
     }
     document.getElementById('current-spo2-display').innerHTML = spO2;
     updateFiO2(fiO2);
+    if (hr === null || isNaN(hr)) {
+        hr = '???';
+    } else {
+        hr = Math.round(hr) + 'bpm'
+    }
+    document.getElementById('current-hr-display').innerHTML = hr;
 }
 
-function updateDisplay(time, spO2, fiO2) {
+function updateDisplay(time, spO2, fiO2, hr) {
     var dateString = toDateString(time);
     if (time > 600) {
         chart.axis.tickFit(true);
@@ -191,6 +201,9 @@ function updateDisplay(time, spO2, fiO2) {
     }
     if (fiO2 === null) {
         fiO2 = NaN;
+    }
+    if (hr === null) {
+        hr = NaN;
     }
     chart.flow({
         columns: [
@@ -217,7 +230,7 @@ function updateDisplay(time, spO2, fiO2) {
             }
         }
     });
-    setCurrentDisplay(time, spO2, fiO2);
+    setCurrentDisplay(time, spO2, fiO2, hr);
 }
 
 var socket = io.connect(window.location.host);
@@ -279,7 +292,7 @@ socket.on('initialize', function(data) {
     });
 });
 socket.on('update', function(data) {
-    updateDisplay(data.time, data.spO2, data.fiO2);
+    updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
 });
 socket.on('tick', function(time) {
     document.getElementById('current-time-display').innerHTML = toDateString(time);

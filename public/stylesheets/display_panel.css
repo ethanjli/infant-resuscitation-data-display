@@ -47,6 +47,11 @@
     fill: #333;
 }
 
+/*
+#current-display {
+    margin-left: 20px;
+}
+*/
 .current-display {
     font: 72px sans-serif;
     font-weight: bold;
@@ -58,8 +63,11 @@
 #current-fio2-display{
     color: dimgray;
 }
+#current-hr-display{
+    color: #53284F;
+}
 .current-display-box {
     margin-top: -20px;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
 }
 
