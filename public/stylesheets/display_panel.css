@@ -1,3 +1,9 @@
+body {
+  background-color: #000;
+}
+h1, h2, h3 {
+  color: white;
+}
 .container-fluid {
     margin: 20px;
 }
@@ -9,17 +15,31 @@
     align-items: center;
 }
 
+#chart path {
+  stroke: white;
+}
+#chart g .tick > line {
+  stroke: white;
+}
+#chart .c3-ygrid-line > line {
+  stroke: white;
+}
+
 #chart .c3-axis {
     stroke-width: 2px;
+    color: white;
 }
 #chart .c3-axis-x-label {
-    font: 24px sans-serif;
+    font: bold 24px sans-serif;
+    fill: white;
 }
 #chart .c3-axis-y-label {
-    font: 24px sans-serif;
+    font: bold 24px sans-serif;
+    fill: white;
 }
 #chart .tick {
     font: 20px sans-serif;
+    fill: white;
 }
 #chart .c3-area {
     opacity: 1;
@@ -44,7 +64,7 @@
     font: bold 24px sans-serif;
 }
 #chart .c3-grid text {
-    fill: #333;
+    fill: white;
 }
 
 /*
@@ -57,17 +77,16 @@
     font-weight: bold;
     line-height: 0.5;
 }
-#current-spo2-display{
-    color: #175e54;
+.spo2-color {
+    color: #00BA86;
 }
-#current-fio2-display{
-    color: dimgray;
+.fio2-color {
+    color: white;
 }
-#current-hr-display{
-    color: #53284F;
+.hr-color {
+    color: #F0E442;
 }
 .current-display-box {
     margin-top: -20px;
     margin-bottom: 40px;
 }
-

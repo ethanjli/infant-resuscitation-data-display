@@ -29,16 +29,16 @@
                 <h2 id="current-time-display" class="current-display">00:00</h2>
             </div>
             <div class="row current-display-box">
-                <h1 class="current-display-label">HR:</h1>
-                <h2 id="current-hr-display" class="current-display">???</h2>
+                <h1 class="current-display-label hr-color">HR:</h1>
+                <h2 id="current-hr-display" class="current-display hr-color">???</h2>
             </div>
             <div class="row current-display-box">
-                <h1 class="current-display-label">SpO<sub>2</sub>:</h1>
-                <h2 id="current-spo2-display" class="current-display">???</h2>
+                <h1 class="current-display-label spo2-color">SpO<sub>2</sub>:</h1>
+                <h2 id="current-spo2-display" class="current-display spo2-color">???</h2>
             </div>
             <div class="row current-display-box">
-                <h1 class="current-display-label">FiO<sub>2</sub>:</h1>
-                <h2 id="current-fio2-display" class="current-display">0%</h2>
+                <h1 class="current-display-label fio2-color">FiO<sub>2</sub>:</h1>
+                <h2 id="current-fio2-display" class="current-display fio2-color">0%</h2>
             </div>
         </div>
     </div>
@@ -109,10 +109,10 @@ var chart = c3.generate({
             FiO2: 'line'
         },
         colors: {
-            targetLower: 'white',
-            targetUpper: '#00BA86',
-            SpO2: '#175E54',
-            FiO2: 'dimgray'
+            targetLower: 'black',
+            targetUpper: '#006E53',
+            SpO2: '#00BA86',
+            FiO2: 'white'
         }
     },
     axis: {
@@ -130,7 +130,7 @@ var chart = c3.generate({
                 }
             },
             min: toDateString(0),
-            max: toDateString(600),
+            max: toDateString(360),
             padding: {
                 left: 0,
                 right: 0.09,
@@ -192,7 +192,7 @@ function setCurrentDisplay(time, spO2, fiO2, hr) {
 function updateDisplay(time, spO2, fiO2, hr) {
     var dateString = toDateString(time);
     $("#chart .c3-ygrid-line.spO2-target-label").addClass('c3-ygrid-line-hidden');
-    if (time > 600) {
+    if (time > 360) {
         chart.axis.tickFit(true);
         chart.axis.tickCount(11);
         $("#chart .c3-ygrid-line").addClass('c3-ygrid-line-hidden');
@@ -215,12 +215,12 @@ function updateDisplay(time, spO2, fiO2, hr) {
         duration: 0,
         to: toDateString(0),
         done: function() {
-            if (time > 600) {
+            if (time > 360) {
                 chart.axis.max({x: toDateString(Math.ceil(time / 60) * 60)});
             }
             if (!isNaN(spO2) && !isNaN(fiO2)) {
                 var annotationDeltaY = 0;
-                if (time > 600) {
+                if (time > 360) {
                     annotationDeltaY = -0.02;
                 }
                 chart.ygrids([
@@ -250,7 +250,7 @@ socket.on('disconnect', function(data) {
 socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');
-        chart.axis.max({x: toDateString(600)});
+        chart.axis.max({x: toDateString(360)});
         document.getElementById('current-time-display').innerHTML = '00:00';
         document.getElementById('current-spo2-display').innerHTML = '???';
         updateFiO2(0);
@@ -266,7 +266,7 @@ socket.on('initialize', function(data) {
     var fiO2Signal = data.fiO2;
     fiO2Signal.unshift('FiO2');
     var annotationDeltaY = 0;
-    if (data.time[data.time.length - 1] > 600) {
+    if (data.time[data.time.length - 1] > 360) {
         chart.axis.max({x: time[time.length - 1]});
         chart.axis.tickFit(true);
         chart.axis.tickCount(11);
@@ -274,7 +274,7 @@ socket.on('initialize', function(data) {
         $("#chart .c3-ygrid-line.fiO2-label").addClass('c3-ygrid-line-hidden');
         annotationDeltaY = -0.02;
     } else {
-        chart.axis.max({x: toDateString(600)});
+        chart.axis.max({x: toDateString(360)});
         chart.axis.tickFit(false);
         chart.axis.tickCount(11);
     }
@@ -309,7 +309,7 @@ socket.on('reset', function(data) {
                     ['SpO2', data.spO2],
                     ['FiO2', data.fiO2]
                 ], done: function() {
-                    chart.axis.max({x: toDateString(600)});
+                    chart.axis.max({x: toDateString(360)});
                     chart.axis.tickFit(false);
                     chart.axis.tickCount(11);
                     setCurrentDisplay(data.time, data.spO2, data.fiO2);
