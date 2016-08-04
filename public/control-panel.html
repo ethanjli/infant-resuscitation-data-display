@@ -173,9 +173,11 @@ function updateSensorConnection(sensorConnection) {
     var delayedSensorConnectionBtn = document.getElementById('btn-delayedconnect-sensors');
     if (sensorConnection) {
         sensorConnectionBtn.innerHTML = 'Disconnect Sensors';
+        delayedSensorConnectionBtn.innerHTML = 'Connected to Sensors';
         delayedSensorConnectionBtn.disabled = 'disabled';
     } else {
         sensorConnectionBtn.innerHTML = 'Connect Sensors';
+        delayedSensorConnectionBtn.innerHTML = 'Connect to Sensors in 15 Seconds';
         delayedSensorConnectionBtn.disabled = '';
     }
     sensorConnectionBtn.disabled = '';
