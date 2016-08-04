@@ -45,8 +45,9 @@
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Vitals</h3></div>
                         <div class="panel-body form-horizontal">
-                            <div class="form-group">
+                            <div class="btn-group-vertical" role="group">
                                 <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
+                                <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default">Connect Sensors in 15 Seconds</button>
                             </div>
                             <hr>
                             <div class="form-group">
@@ -168,10 +169,13 @@ function updateSimulationPaused() {
 }
 function updateSensorConnection(sensorConnection) {
     var sensorConnectionBtn = document.getElementById('btn-connectdisconnect-sensors');
+    var delayedSensorConnectionBtn = document.getElementById('btn-delayedconnect-sensors');
     if (sensorConnection) {
         sensorConnectionBtn.innerHTML = 'Disconnect Sensors';
+        delayedSensorConnectionBtn.disabled = 'disabled';
     } else {
         sensorConnectionBtn.innerHTML = 'Connect Sensors';
+        delayedSensorConnectionBtn.disabled = '';
     }
     sensorConnectionBtn.disabled = '';
 }
@@ -294,11 +298,32 @@ document.getElementById('btn-pauseresume-simulation').onclick = function() {
 };
 document.getElementById('btn-connectdisconnect-sensors').onclick = function() {
     var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
+    var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');
     if (sensorsBtn.innerHTML === 'Connect Sensors') {
         socket.emit('sensor-connection', true);
+        delayedSensorBtn.innerHTML = 'Connected to Sensors';
+        delayedSensorBtn.disabled = 'disabled';
     } else if (sensorsBtn.innerHTML === 'Disconnect Sensors') {
+        delayedSensorBtn.innerHTML = 'Connect Sensors in 15 Seconds';
         socket.emit('sensor-connection', false);
     }
+    sensorsBtn.disabled = 'disabled';
+};
+document.getElementById('btn-delayedconnect-sensors').onclick = function() {
+    var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
+    var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');
+    var delay = 15;
+    for (i = 1; i < delay; i++) {
+        setTimeout((function(countdown) {
+            console.log('Connecting in ' + (15 - countdown) + 's...');
+            delayedSensorBtn.innerHTML = 'Connecting in ' + (15 - countdown) + 's...';
+        }).bind(this, i), i * 1000);
+    }
+    setTimeout(function() {
+        socket.emit('sensor-connection', true);
+        delayedSensorBtn.innerHTML = 'Connected to Sensors';
+    }, delay * 1000);
+    delayedSensorBtn.disabled = 'disabled';
     sensorsBtn.disabled = 'disabled';
 };
 document.getElementById('input-spo2').onchange = function() {
