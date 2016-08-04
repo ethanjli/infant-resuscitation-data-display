@@ -5,6 +5,7 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
 
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
@@ -342,6 +343,19 @@ document.getElementById('input-hr').onchange = function() {
     var hrElem = document.getElementById('input-hr');
     socket.emit('hr', hrElem.value);
 };
+
+$(function() {
+    $(':input[type="number"]').on('mousewheel', function(event) {
+        event.target.value = parseInt(event.target.value) + event.deltaY;
+        if (event.target.min !== undefined) {
+            event.target.value = Math.max(event.target.min, event.target.value);
+        }
+        if (event.target.max !== undefined) {
+            event.target.value = Math.min(event.target.max, event.target.value);
+        }
+        event.target.onchange();
+    });
+});
 
 </script>
 
