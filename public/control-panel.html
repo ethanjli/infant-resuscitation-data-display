@@ -39,6 +39,10 @@
                                 <button type="button" id="btn-startreset-simulation" class="btn btn-default">Start</button>
                                 <button type="button" id="btn-pauseresume-simulation" class="btn btn-default">Pause</button>
                             </div>
+                            <hr>
+                            <form action="/csv" method="get" target="_blank">
+                                <input type="submit" id="btn-download-csv" class="btn btn-default" value="Download Simulation Record">
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -147,18 +151,22 @@ function updateStatusHardwareDisconnected() {
 function updateSimulationStarted() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    var downloadBtn = document.getElementById('btn-download-csv');
     startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Reset';
     pauseResumeBtn.disabled = '';
     pauseResumeBtn.innerHTML = 'Pause';
+    downloadBtn.disabled = '';
 }
 function updateSimulationReady() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    var downloadBtn = document.getElementById('btn-download-csv');
     startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Start';
     pauseResumeBtn.disabled = 'disabled';
     pauseResumeBtn.innerHTML = 'Pause';
+    downloadBtn.disabled = 'disabled';
 }
 function updateSimulationPaused() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
