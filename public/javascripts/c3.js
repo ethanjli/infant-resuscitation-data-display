@@ -6935,6 +6935,15 @@
         }
     };
 
+    c3_chart_fn.axis.tickValues = function (tickValues) {
+        var $$ = this.internal, config = $$.config;
+        if (arguments.length) {
+            config.axis_x_tick_values = tickValues;
+        } else {
+            return config.axis_x_tick_values;
+        }
+    };
+
     c3_chart_fn.legend = function () {};
     c3_chart_fn.legend.show = function (targetIds) {
         var $$ = this.internal;

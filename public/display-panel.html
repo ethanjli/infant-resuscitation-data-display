@@ -127,7 +127,9 @@ var chart = c3.generate({
                 fit: false,
                 culling: {
                     max: 11
-                }
+                },
+                count: 11,
+                values: [toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]
             },
             min: toDateString(0),
             max: toDateString(360),
@@ -194,6 +196,7 @@ function updateDisplay(time, spO2, fiO2, hr) {
     $("#chart .c3-ygrid-line.spO2-target-label").addClass('c3-ygrid-line-hidden');
     if (time > 360) {
         chart.axis.tickFit(true);
+        chart.axis.tickValues(undefined);
         chart.axis.tickCount(11);
         $("#chart .c3-ygrid-line").addClass('c3-ygrid-line-hidden');
     }
@@ -269,6 +272,7 @@ socket.on('initialize', function(data) {
     if (data.time[data.time.length - 1] > 360) {
         chart.axis.max({x: time[time.length - 1]});
         chart.axis.tickFit(true);
+        chart.axis.tickValues(undefined);
         chart.axis.tickCount(11);
         $("#chart .c3-ygrid-line.spO2-label").addClass('c3-ygrid-line-hidden');
         $("#chart .c3-ygrid-line.fiO2-label").addClass('c3-ygrid-line-hidden');
@@ -276,6 +280,7 @@ socket.on('initialize', function(data) {
     } else {
         chart.axis.max({x: toDateString(360)});
         chart.axis.tickFit(false);
+        chart.axis.tickValues([toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]);
         chart.axis.tickCount(11);
     }
     chart.ygrids([
@@ -311,6 +316,7 @@ socket.on('reset', function(data) {
                 ], done: function() {
                     chart.axis.max({x: toDateString(360)});
                     chart.axis.tickFit(false);
+                    chart.axis.tickValues([toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]);
                     chart.axis.tickCount(11);
                     setCurrentDisplay(data.time, data.spO2, data.fiO2);
                     chart.ygrids([
