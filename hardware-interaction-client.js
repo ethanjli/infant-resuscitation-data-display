@@ -1,6 +1,6 @@
 var five = require('johnny-five');
 
-var socket = require('socket.io-client')('http://stormy-refuge-48109.herokuapp.com')
+var socket = require('socket.io-client')('http://localhost:5000')
 //var socket = require('socket.io-client')('http://localhost:5000');
 
 socket.on('connect', function() {
@@ -20,7 +20,7 @@ socket.on('echo', function(data) {
   console.log('Sockets: Echo from server', data);
 })
 
-var board = new five.Board();
+var board = new five.Board({port:'COM3'});
 var fiO2 = null
 
 function rescale(value, fromLow, fromHigh, toLow, toHigh) {
