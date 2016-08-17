@@ -64,11 +64,10 @@ h1, h2, h3 {
     fill: white;
 }
 
-/*
+
 #current-display {
-    margin-left: 20px;
+    margin-left: 100px;
 }
-*/
 .current-display {
     font: 72px sans-serif;
     font-weight: bold;
@@ -82,6 +81,10 @@ h1, h2, h3 {
 }
 .hr-color {
     color: #F0E442;
+}
+.current-display-box {
+    margin-top: 36px;
+    margin-bottom: 36px;
 }
 
 canvas .display-waveform {
