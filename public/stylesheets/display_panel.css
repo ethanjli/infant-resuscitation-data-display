@@ -38,7 +38,7 @@ h1, h2, h3 {
     fill: white;
 }
 #chart .tick {
-    font: 20px sans-serif;
+    font: 24px sans-serif;
     fill: white;
 }
 #chart .c3-area {

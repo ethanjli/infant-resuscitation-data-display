@@ -29,8 +29,9 @@
         <div id="chart" class="col-md-9 col-sm-9 col-xs-9"></div>
         <div id="current-display" class="col-md-1 col-md-offset-1">
             <div class="row current-display-box">
-                <h1 class="current-display-label">Time:</h1>
-                <h2 id="current-time-display" class="current-display"></h2>
+                <h1 class="current-display-label spo2-color">SpO<sub>2</sub>:</h1>
+                <h2 id="current-spo2-display" class="current-display spo2-color">???</h2>
+                  <canvas width="200" height="50" class="display-waveform" id="spo2-ppg-display"></canvas>
             </div>
             <div class="row current-display-box">
                 <h1 class="current-display-label hr-color">HR:</h1>
@@ -38,13 +39,12 @@
                   <canvas width="200" height="50" class="display-waveform" id="hr-ecg-display"></canvas>
             </div>
             <div class="row current-display-box">
-                <h1 class="current-display-label spo2-color">SpO<sub>2</sub>:</h1>
-                <h2 id="current-spo2-display" class="current-display spo2-color">???</h2>
-                  <canvas width="200" height="50" class="display-waveform" id="spo2-ppg-display"></canvas>
-            </div>
-            <div class="row current-display-box">
                 <h1 class="current-display-label fio2-color">FiO<sub>2</sub>:</h1>
                 <h2 id="current-fio2-display" class="current-display fio2-color">0%</h2>
+            </div>
+            <div class="row current-display-box">
+                <h1 class="current-display-label">Time:</h1>
+                <h2 id="current-time-display" class="current-display"></h2>
             </div>
         </div>
     </div>
@@ -121,7 +121,7 @@ var chart = c3.generate({
     axis: {
         x: {
             label: {
-                text: 'Time (min)',
+                text: 'Time (min:sec)',
                 position: 'outer-center'
             },
             type: 'timeseries',
@@ -150,9 +150,9 @@ var chart = c3.generate({
             },
             show: true,
             tick: {
-                format: d3.format('%')
+                format: function(number) {return number * 100;}
             },
-            min: 0,
+            min: 0.2,
             max: 1,
             padding: 0
         }
