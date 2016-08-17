@@ -182,15 +182,19 @@ function setCurrentDisplay(time, spO2, fiO2, hr) {
     apgarTime.update(time);
     if (spO2 === null || isNaN(spO2)) {
         spO2 = '???';
+        ecg.disconnect();
     } else {
-        spO2 = Math.round(spO2 * 100) + '%'
+        spO2 = Math.round(spO2 * 100) + '%';
+        ecg.connect();
     }
     document.getElementById('current-spo2-display').innerHTML = spO2;
     updateFiO2(fiO2);
     if (hr === null || isNaN(hr)) {
         hr = '???';
+        ppg.disconnect();
     } else {
-        hr = Math.round(hr)
+        hr = Math.round(hr);
+        ppg.connect();
     }
     document.getElementById('current-hr-display').innerHTML = hr;
 }

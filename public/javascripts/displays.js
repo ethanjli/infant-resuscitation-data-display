@@ -11,6 +11,7 @@ function WaveformDisplay(canvasElemId, color, thickness, amplitudeGain, constant
     this.ctx.strokeStyle = color;
     this.ctx.lineWidth = thickness;
     this.scanSpeed = 0.75;
+    this.connected = false;
 
     this.amplitudeGain = amplitudeGain;
     this.constantGain = constantGain;
@@ -37,16 +38,26 @@ WaveformDisplay.prototype.draw = function() {
     setTimeout((function() {
         requestAnimationFrame(this.draw.bind(this));
 
-        this.y = this.sample();
-        this.n = (this.n + 1) % this.data.length;
-        this.x += this.scanSpeed;
+        if (this.connected) {
+            this.y = this.sample();
+            this.n = (this.n + 1) % this.data.length;
+            this.x += this.scanSpeed;
 
-        this.drawCurrentSegment();
+            this.drawCurrentSegment();
 
-        this.xOld = this.x;
-        this.yOld = this.y;
-        if (this.xOld > this.canvas.width) this.x = this.xOld = -1 * this.scanSpeed;
+            this.xOld = this.x;
+            this.yOld = this.y;
+            if (this.xOld > this.canvas.width) this.x = this.xOld = -1 * this.scanSpeed;
+        } else {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }).bind(this), 1000 / this.fps);
+}
+WaveformDisplay.prototype.connect = function() {
+    this.connected = true;
+}
+WaveformDisplay.prototype.disconnect = function() {
+    this.connected = false;
 }
 
 var ecgData = [
