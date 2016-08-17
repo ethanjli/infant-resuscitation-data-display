@@ -33,7 +33,7 @@
                 <hr>
                 <div class="col-md-4">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
+                        <div class="panel-heading"><h3 class="panel-title">Simulation</h3></div>
                         <div class="panel-body">
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -44,14 +44,29 @@
                                 </div>
                                 <hr>
                                 <div class="form-group">
+                                    <div class="row">
+                                        <label>Simulation state</label>
+                                    </div>
                                     <div class="btn-group" role="group">
                                         <button type="button" id="btn-startreset-simulation" class="btn btn-default">Start</button>
                                         <button type="button" id="btn-pauseresume-simulation" class="btn btn-default">Pause</button>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Sensor Connection</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
+                                        <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default">Connect to Sensors in 15 Seconds</button>
+                                    </div>
+                                </div>
                             </form>
                             <hr>
                             <form action="/csv" method="get" target="_blank">
+                                <div class="row">
+                                    <label>Data Export</label>
+                                </div>
                                 <input type="submit" id="btn-download-csv" class="btn btn-default" value="Download Simulation Record">
                             </form>
                         </div>
@@ -63,24 +78,29 @@
                         <div class="panel-body form-horizontal">
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <div class="btn-group-vertical" role="group">
-                                        <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
-                                        <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default">Connect Sensors in 15 Seconds</button>
+                                    <div class="row">
+                                        <label>SpO<small>2</small> Signal Parameters</label>
                                     </div>
-                                </div>
-                                <hr>
-                                <div class="form-group">
-                                    <label for="input-spo2" class="col-sm-5 control-label">SpO<sub>2</sub> <small>(Signal Mean)</small></label>
+                                    <label for="input-spo2" class="col-sm-5 control-label">Signal Mean</label>
                                     <div class="input-group col-sm-5">
                                         <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
                                         <div class="input-group-addon">%</div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="input-spo2-noise" class="col-sm-5 control-label">SpO<sub>2</sub> Noise <small>(Signal Standard Deviation)</small></label>
+                                    <label for="input-spo2-noise" class="col-sm-5 control-label">Signal Standard Deviation</label>
                                     <div class="input-group col-sm-5">
                                         <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
                                         <div class="input-group-addon">%</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Auto-Adjust Signal Mean</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-spo2-autoincrease" class="btn btn-default">Increase by 1%/sec</button>
+                                        <button type="button" id="btn-spo2-autodecrease" class="btn btn-default">Decrease by 1%/sec</button>
                                     </div>
                                 </div>
                                 <hr>
@@ -219,6 +239,7 @@ function updateTime(time) {
 function updateSpO2(spO2) {
     var spO2Elem = document.getElementById('input-spo2');
     spO2Elem.value = Math.round(spO2 * 100);
+    afterSpO2Change();
 }
 function updateSpO2Noise(spO2Noise) {
     var spO2NoiseElem = document.getElementById('input-spo2-noise');
@@ -231,6 +252,31 @@ function updateFiO2(fiO2) {
 function updateHR(hr) {
     var hrElem = document.getElementById('input-hr');
     hrElem.value = hr;
+}
+function afterSpO2Change() {
+    var spO2Elem = document.getElementById('input-spo2');
+    var autoIncreaseBtn = document.getElementById('btn-spo2-autoincrease');
+    var autoDecreaseBtn = document.getElementById('btn-spo2-autodecrease');
+    if (parseInt(spO2Elem.value) === parseInt(spO2Elem.max)) {
+        autoIncreaseBtn.disabled = 'disabled';
+        autoIncreaseBtn.innerHTML = 'Can\'t Increase Beyond ' + spO2Elem.max + '%';
+        autoDecreaseBtn.disabled = '';
+        clearInterval(spO2AutoAdjustTimer);
+    } else if (parseInt(spO2Elem.value) === parseInt(spO2Elem.min)) {
+        autoDecreaseBtn.disabled = 'disabled';
+        autoDecreaseBtn.innerHTML = 'Can\'t Decrease Beyond ' + spO2Elem.min + '%';
+        autoIncreaseBtn.disabled = '';
+        clearInterval(spO2AutoAdjustTimer);
+    } else {
+        if (autoIncreaseBtn.innerHTML === ('Can\'t Increase Beyond' + spO2Elem.max + '%')) {
+            autoIncreaseBtn.innerHTML = 'Increase by 1%/sec';
+            autoIncreaseBtn.disabled = '';
+        }
+        if (autoDecreaseBtn.innerHTML === ('Can\'t Decrease Beyond' + spO2Elem.max + '%')) {
+            autoDecreaseBtn.innerHTML = 'Decrease by 1%/sec';
+            autoDecreaseBtn.disabled = '';
+        }
+    }
 }
 
 var socket = io.connect(window.location.host);
@@ -312,6 +358,7 @@ socket.on('hr', function(data) {
     updateHR(data);
 });
 
+var spO2AutoAdjustTimer, hrAutoAdjustTimer;
 document.getElementById('btn-startreset-simulation').onclick = function() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
@@ -366,12 +413,51 @@ document.getElementById('btn-delayedconnect-sensors').onclick = function() {
 };
 document.getElementById('input-spo2').onchange = function() {
     var spO2Elem = document.getElementById('input-spo2');
+    afterSpO2Change();
     socket.emit('spO2', spO2Elem.value / 100);
 };
 document.getElementById('input-spo2-noise').onchange = function() {
     var spO2NoiseElem = document.getElementById('input-spo2-noise');
     socket.emit('spO2-noise', spO2NoiseElem.value / 100);
 };
+document.getElementById('btn-spo2-autoincrease').onclick = function() {
+    var spO2Elem = document.getElementById('input-spo2');
+    var autoIncreaseBtn = document.getElementById('btn-spo2-autoincrease');
+    var autoDecreaseBtn = document.getElementById('btn-spo2-autodecrease');
+    clearInterval(spO2AutoAdjustTimer);
+    if (autoIncreaseBtn.innerHTML === 'Increase by 1%/sec') {
+        autoIncreaseBtn.innerHTML = 'Stop Auto-Increasing';
+        autoDecreaseBtn.innerHTML = 'Decrease by 1%/sec';
+        autoDecreaseBtn.disabled = '';
+        spO2AutoAdjustTimer = setInterval(function() {
+            spO2Elem.value = Math.max(parseInt(spO2Elem.min),
+                                      Math.min(parseInt(spO2Elem.max),
+                                               parseInt(spO2Elem.value) + 1));
+            spO2Elem.onchange();
+        }, 1000);
+    } else if (autoIncreaseBtn.innerHTML === 'Stop Auto-Increasing') {
+        autoIncreaseBtn.innerHTML = 'Increase by 1%/sec';
+    }
+}
+document.getElementById('btn-spo2-autodecrease').onclick = function() {
+    var spO2Elem = document.getElementById('input-spo2');
+    var autoIncreaseBtn = document.getElementById('btn-spo2-autoincrease');
+    var autoDecreaseBtn = document.getElementById('btn-spo2-autodecrease');
+    clearInterval(spO2AutoAdjustTimer);
+    if (autoDecreaseBtn.innerHTML === 'Decrease by 1%/sec') {
+        autoDecreaseBtn.innerHTML = 'Stop Auto-Decreasing';
+        autoIncreaseBtn.innerHTML = 'Increase by 1%/sec';
+        autoIncreaseBtn.disabled = '';
+        spO2AutoAdjustTimer = setInterval(function() {
+            spO2Elem.value = Math.max(parseInt(spO2Elem.min),
+                                      Math.min(parseInt(spO2Elem.max),
+                                               parseInt(spO2Elem.value) - 1));
+            spO2Elem.onchange();
+        }, 1000);
+    } else if (autoDecreaseBtn.innerHTML === 'Stop Auto-Decreasing') {
+        autoDecreaseBtn.innerHTML = 'Decrease by 1%/sec';
+    }
+}
 document.getElementById('input-fio2').onchange = function() {
     var fiO2Elem = document.getElementById('input-fio2');
     socket.emit('fiO2', fiO2Elem.value / 100);
