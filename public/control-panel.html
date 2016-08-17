@@ -327,7 +327,6 @@ socket.on('sensor-connection', function(data) {
 });
 socket.on('tick', updateTime);
 
-var spO2AutoAdjustTimer, hrAutoAdjustTimer;
 document.getElementById('btn-startreset-simulation').onclick = function() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');

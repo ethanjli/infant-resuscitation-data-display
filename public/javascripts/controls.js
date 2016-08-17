@@ -64,13 +64,15 @@ AutoAdjuster.prototype.afterUpdate = function() {
     var min = this.adjustableValue.min;
     var units = this.adjustableValue.units;
     if (value >= max) {
-        autoIncrementBtn.disabled = 'disabled';
         autoIncrementBtn.innerHTML = this.noIncreaseString;
+        autoIncrementBtn.disabled = 'disabled';
+        autoDecrementBtn.innerHTML = this.decreaseString;
         autoDecrementBtn.disabled = '';
         clearInterval(this.autoAdjustTimer);
     } else if (value <= min) {
-        autoDecrementBtn.disabled = 'disabled';
         autoDecrementBtn.innerHTML = this.noDecreaseString;
+        autoDecrementBtn.disabled = 'disabled';
+        autoIncrementBtn.innerHTML = this.increaseString;
         autoIncrementBtn.disabled = '';
         clearInterval(this.autoAdjustTimer);
     } else {
@@ -95,6 +97,7 @@ AutoAdjuster.prototype.monitor = function() {
             autoDecrementBtn.innerHTML = this.decreaseString;
             autoDecrementBtn.disabled = '';
             this.autoAdjustTimer = setInterval((function() {
+                console.log('Incrementing');
                 value.update(value.getValue() + this.increment, true);
             }).bind(this), 1000 * this.timeStep);
         } else if (autoIncrementBtn.innerHTML === this.stopIncreaseString) {
