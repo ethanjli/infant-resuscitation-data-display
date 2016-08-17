@@ -10,6 +10,8 @@
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
+<script src="/javascripts/controls.js"></script>
+
 <style>
 .vertical-center {
     min-height: 90%;
@@ -99,8 +101,8 @@
                                         <label>Auto-Adjust Signal Mean</label>
                                     </div>
                                     <div class="btn-group-vertical" role="group">
-                                        <button type="button" id="btn-spo2-autoincrease" class="btn btn-default">Increase by 1%/sec</button>
-                                        <button type="button" id="btn-spo2-autodecrease" class="btn btn-default">Decrease by 1%/sec</button>
+                                        <button type="button" id="btn-spo2-autoincrease" class="btn btn-default"></button>
+                                        <button type="button" id="btn-spo2-autodecrease" class="btn btn-default"></button>
                                     </div>
                                 </div>
                                 <hr>
@@ -116,8 +118,8 @@
                                         <label>Auto-Adjust Heart Rate</label>
                                     </div>
                                     <div class="btn-group-vertical" role="group">
-                                        <button type="button" id="btn-hr-autoincrease" class="btn btn-default">Increase by 5 bpm/2 sec</button>
-                                        <button type="button" id="btn-hr-autodecrease" class="btn btn-default">Decrease by 5 bpm/2 sec</button>
+                                        <button type="button" id="btn-hr-autoincrease" class="btn btn-default"></button>
+                                        <button type="button" id="btn-hr-autodecrease" class="btn btn-default"></button>
                                     </div>
                                 </div>
                             </form>
@@ -146,6 +148,23 @@
 </div>
 
 <script>
+var socket = io.connect(window.location.host);
+var spO2 = new AdjustableValue('input-spo2', '%', socket, 'spO2');
+spO2.listen('Updating SpO2 level to ');
+spO2.monitor();
+var spO2AutoAdjuster = new AutoAdjuster(spO2, 'btn-spo2-autoincrease', 'btn-spo2-autodecrease', 1, 1);
+spO2AutoAdjuster.monitor();
+var spO2Noise = new AdjustableValue('input-spo2-noise', '%', socket, 'spO2-noise');
+spO2Noise.listen('Updating SpO2 noise range to +/-');
+spO2Noise.monitor();
+var hr = new AdjustableValue('input-hr', ' bpm', socket, 'hr');
+hr.listen('Updating HR to ');
+hr.monitor();
+var hrAutoAdjuster = new AutoAdjuster(hr, 'btn-hr-autoincrease', 'btn-hr-autodecrease', 5, 2);
+hrAutoAdjuster.monitor();
+var fiO2 = new AdjustableValue('input-fio2', '%', socket, 'fiO2');
+fiO2.listen('Updating FiO2 level to ');
+fiO2.monitor();
 
 function updateStatusConnected() {
     var statusElem = document.getElementById('status-connection');
@@ -245,76 +264,7 @@ function updateTime(time) {
     var timeElem = document.getElementById('apgar-time');
     timeElem.innerHTML = toDateString(time);
 }
-function updateSpO2(spO2) {
-    var spO2Elem = document.getElementById('input-spo2');
-    spO2Elem.value = Math.round(spO2 * 100);
-    afterSpO2Change();
-}
-function updateSpO2Noise(spO2Noise) {
-    var spO2NoiseElem = document.getElementById('input-spo2-noise');
-    spO2NoiseElem.value = Math.round(spO2Noise * 100);
-}
-function updateFiO2(fiO2) {
-    var fiO2Elem = document.getElementById('input-fio2');
-    fiO2Elem.value = Math.round(fiO2 * 100);
-}
-function updateHR(hr) {
-    var hrElem = document.getElementById('input-hr');
-    hrElem.value = hr;
-    afterHRChange();
-}
-function afterSpO2Change() {
-    var spO2Elem = document.getElementById('input-spo2');
-    var autoIncreaseBtn = document.getElementById('btn-spo2-autoincrease');
-    var autoDecreaseBtn = document.getElementById('btn-spo2-autodecrease');
-    if (parseInt(spO2Elem.value) === parseInt(spO2Elem.max)) {
-        autoIncreaseBtn.disabled = 'disabled';
-        autoIncreaseBtn.innerHTML = 'Can\'t Increase Beyond ' + spO2Elem.max + '%';
-        autoDecreaseBtn.disabled = '';
-        clearInterval(spO2AutoAdjustTimer);
-    } else if (parseInt(spO2Elem.value) === parseInt(spO2Elem.min)) {
-        autoDecreaseBtn.disabled = 'disabled';
-        autoDecreaseBtn.innerHTML = 'Can\'t Decrease Beyond ' + spO2Elem.min + '%';
-        autoIncreaseBtn.disabled = '';
-        clearInterval(spO2AutoAdjustTimer);
-    } else {
-        if (autoIncreaseBtn.innerHTML === ('Can\'t Increase Beyond' + spO2Elem.max + '%')) {
-            autoIncreaseBtn.innerHTML = 'Increase by 1%/sec';
-            autoIncreaseBtn.disabled = '';
-        }
-        if (autoDecreaseBtn.innerHTML === ('Can\'t Decrease Beyond' + spO2Elem.max + '%')) {
-            autoDecreaseBtn.innerHTML = 'Decrease by 1%/sec';
-            autoDecreaseBtn.disabled = '';
-        }
-    }
-}
-function afterHRChange() {
-    var hrElem = document.getElementById('input-hr');
-    var autoIncreaseBtn = document.getElementById('btn-hr-autoincrease');
-    var autoDecreaseBtn = document.getElementById('btn-hr-autodecrease');
-    if (parseInt(hrElem.value) === parseInt(hrElem.max)) {
-        autoIncreaseBtn.disabled = 'disabled';
-        autoIncreaseBtn.innerHTML = 'Can\'t Increase Beyond ' + hrElem.max + ' bpm';
-        autoDecreaseBtn.disabled = '';
-        clearInterval(hrAutoAdjustTimer);
-    } else if (parseInt(hrElem.value) === parseInt(hrElem.min)) {
-        autoDecreaseBtn.disabled = 'disabled';
-        autoDecreaseBtn.innerHTML = 'Can\'t Decrease Beyond ' + hrElem.min + ' bpm';
-        autoIncreaseBtn.disabled = '';
-        clearInterval(hrAutoAdjustTimer);
-    } else {
-        if (autoIncreaseBtn.innerHTML === ('Can\'t Increase Beyond' + hrElem.max + ' bpm')) {
-            autoIncreaseBtn.innerHTML = 'Increase by 5 bpm/2 sec';
-            autoIncreaseBtn.disabled = '';
-        }
-        if (autoDecreaseBtn.innerHTML === ('Can\'t Decrease Beyond' + hrElem.max + ' bpm')) {
-            autoDecreaseBtn.innerHTML = 'Decrease by 5 bpm/2 sec';
-            autoDecreaseBtn.disabled = '';
-        }
-    }
-}
 
-var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'control-panel'});
     console.log('Sockets: Connected to server.');
@@ -376,22 +326,6 @@ socket.on('sensor-connection', function(data) {
     updateSensorConnection(data);
 });
 socket.on('tick', updateTime);
-socket.on('spO2', function(data) {
-    console.log('Sockets: Updating SpO2 level to ' + data + '.');
-    updateSpO2(data);
-});
-socket.on('spO2-noise', function(data) {
-    console.log('Sockets: Updating SpO2 noise range to +/- ' + data + '.');
-    updateSpO2Noise(data);
-});
-socket.on('fiO2', function(data) {
-    console.log('Sockets: Updating FiO2 level to ' + data + '.');
-    updateFiO2(data);
-});
-socket.on('hr', function(data) {
-    console.log('Sockets: Updating HR to ' + data + '.');
-    updateHR(data);
-});
 
 var spO2AutoAdjustTimer, hrAutoAdjustTimer;
 document.getElementById('btn-startreset-simulation').onclick = function() {
@@ -446,100 +380,6 @@ document.getElementById('btn-delayedconnect-sensors').onclick = function() {
     delayedSensorBtn.disabled = 'disabled';
     sensorsBtn.disabled = 'disabled';
 };
-document.getElementById('input-spo2').onchange = function() {
-    var spO2Elem = document.getElementById('input-spo2');
-    afterSpO2Change();
-    socket.emit('spO2', spO2Elem.value / 100);
-};
-document.getElementById('input-spo2-noise').onchange = function() {
-    var spO2NoiseElem = document.getElementById('input-spo2-noise');
-    socket.emit('spO2-noise', spO2NoiseElem.value / 100);
-};
-document.getElementById('btn-spo2-autoincrease').onclick = function() {
-    var spO2Elem = document.getElementById('input-spo2');
-    var autoIncreaseBtn = document.getElementById('btn-spo2-autoincrease');
-    var autoDecreaseBtn = document.getElementById('btn-spo2-autodecrease');
-    clearInterval(spO2AutoAdjustTimer);
-    if (autoIncreaseBtn.innerHTML === 'Increase by 1%/sec') {
-        autoIncreaseBtn.innerHTML = 'Stop Auto-Increasing';
-        autoDecreaseBtn.innerHTML = 'Decrease by 1%/sec';
-        autoDecreaseBtn.disabled = '';
-        spO2AutoAdjustTimer = setInterval(function() {
-            spO2Elem.value = Math.max(parseInt(spO2Elem.min),
-                                      Math.min(parseInt(spO2Elem.max),
-                                               parseInt(spO2Elem.value) + 1));
-            spO2Elem.onchange();
-        }, 1000);
-    } else if (autoIncreaseBtn.innerHTML === 'Stop Auto-Increasing') {
-        autoIncreaseBtn.innerHTML = 'Increase by 1%/sec';
-    }
-}
-document.getElementById('btn-spo2-autodecrease').onclick = function() {
-    var spO2Elem = document.getElementById('input-spo2');
-    var autoIncreaseBtn = document.getElementById('btn-spo2-autoincrease');
-    var autoDecreaseBtn = document.getElementById('btn-spo2-autodecrease');
-    clearInterval(spO2AutoAdjustTimer);
-    if (autoDecreaseBtn.innerHTML === 'Decrease by 1%/sec') {
-        autoDecreaseBtn.innerHTML = 'Stop Auto-Decreasing';
-        autoIncreaseBtn.innerHTML = 'Increase by 1%/sec';
-        autoIncreaseBtn.disabled = '';
-        spO2AutoAdjustTimer = setInterval(function() {
-            spO2Elem.value = Math.max(parseInt(spO2Elem.min),
-                                      Math.min(parseInt(spO2Elem.max),
-                                               parseInt(spO2Elem.value) - 1));
-            spO2Elem.onchange();
-        }, 1000);
-    } else if (autoDecreaseBtn.innerHTML === 'Stop Auto-Decreasing') {
-        autoDecreaseBtn.innerHTML = 'Decrease by 1%/sec';
-    }
-}
-document.getElementById('input-fio2').onchange = function() {
-    var fiO2Elem = document.getElementById('input-fio2');
-    socket.emit('fiO2', fiO2Elem.value / 100);
-};
-document.getElementById('input-hr').onchange = function() {
-    var hrElem = document.getElementById('input-hr');
-    afterHRChange();
-    socket.emit('hr', hrElem.value);
-};
-document.getElementById('btn-hr-autoincrease').onclick = function() {
-    var hrElem = document.getElementById('input-hr');
-    var autoIncreaseBtn = document.getElementById('btn-hr-autoincrease');
-    var autoDecreaseBtn = document.getElementById('btn-hr-autodecrease');
-    clearInterval(hrAutoAdjustTimer);
-    if (autoIncreaseBtn.innerHTML === 'Increase by 5 bpm/2 sec') {
-        autoIncreaseBtn.innerHTML = 'Stop Auto-Increasing';
-        autoDecreaseBtn.innerHTML = 'Decrease by 5 bpm/2 sec';
-        autoDecreaseBtn.disabled = '';
-        hrAutoAdjustTimer = setInterval(function() {
-            hrElem.value = Math.max(parseInt(hrElem.min),
-                                    Math.min(parseInt(hrElem.max),
-                                             parseInt(hrElem.value) + 5));
-            hrElem.onchange();
-        }, 2000);
-    } else if (autoIncreaseBtn.innerHTML === 'Stop Auto-Increasing') {
-        autoIncreaseBtn.innerHTML = 'Increase by 5 bpm/2 sec';
-    }
-}
-document.getElementById('btn-hr-autodecrease').onclick = function() {
-    var hrElem = document.getElementById('input-hr');
-    var autoIncreaseBtn = document.getElementById('btn-hr-autoincrease');
-    var autoDecreaseBtn = document.getElementById('btn-hr-autodecrease');
-    clearInterval(hrAutoAdjustTimer);
-    if (autoDecreaseBtn.innerHTML === 'Decrease by 5 bpm/2 sec') {
-        autoDecreaseBtn.innerHTML = 'Stop Auto-Decreasing';
-        autoIncreaseBtn.innerHTML = 'Increase by 5 bpm/2 sec';
-        autoIncreaseBtn.disabled = '';
-        hrAutoAdjustTimer = setInterval(function() {
-            hrElem.value = Math.max(parseInt(hrElem.min),
-                                    Math.min(parseInt(hrElem.max),
-                                             parseInt(hrElem.value) - 5));
-            hrElem.onchange();
-        }, 2000);
-    } else if (autoDecreaseBtn.innerHTML === 'Stop Auto-Decreasing') {
-        autoDecreaseBtn.innerHTML = 'Decrease by 5 bpm/2 sec';
-    }
-}
 
 $(function() {
     $(':input[type="number"]').on('mousewheel', function(event) {
