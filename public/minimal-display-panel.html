@@ -106,7 +106,7 @@ socket.on('initialize', function(data) {
     } else {
         console.log('Sockets: Initializing with previous data.');
     }
-    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1]);
+    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1], data.hr[data.hr.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
     var spO2Signal = data.spO2;
@@ -116,7 +116,7 @@ socket.on('update', function(data) {
     updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
 });
 socket.on('reset', function(data) {
-    setCurrentDisplay(data.time, data.spO2, data.fiO2);
+    setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
     console.log('Sockets: Resetting data.');
 });
 </script>
