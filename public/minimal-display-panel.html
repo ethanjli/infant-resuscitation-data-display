@@ -11,6 +11,9 @@
 
 <link type="text/css" rel="stylesheet" href="/stylesheets/display_panel.css">
 
+<script src="/javascripts/common.js"></script>
+<script src="/javascripts/displays.js"></script>
+
 </head>
 
 <body>
@@ -25,7 +28,7 @@
                 </div>
                 <div class="col-md-3 col-sm-3 col-xs-2">
                     <h1 class="current-display-label">Time:</h1>
-                    <h2 id="current-time-display" class="current-display">00:00</h2>
+                    <h2 id="current-time-display" class="current-display"></h2>
                 </div>
             </div>
             <div class="row current-display-box">
@@ -42,6 +45,9 @@
 </div>
 
 <script>
+var socket = io.connect(window.location.host);
+var apgarTime = new ReadableValue('current-time-display', 'time', socket, 'tick');
+apgarTime.listen();
 
 function updateStatusConnected() {
     var statusElem = document.getElementById('status-connection');
@@ -56,18 +62,8 @@ function updateStatusDisconnected() {
     statusElem.style.visibility = 'visible';
 }
 
-function toDateString(totalSeconds) {
-    var minutes = parseInt(totalSeconds / 60) % 60;
-    var seconds = totalSeconds % 60;
-    return (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
-}
-function fromDateString(dateString) {
-    var a = dateString.split(':');
-    return a[0] * 60 + a[1] * 1;
-}
-
 function setCurrentDisplay(time, spO2, fiO2, hr) {
-    document.getElementById('current-time-display').innerHTML = toDateString(time);
+    apgarTime.update(time);
     if (spO2 === null || isNaN(spO2)) {
         spO2 = '???';
     } else {
@@ -93,7 +89,6 @@ function updateDisplay(time, spO2, fiO2, hr) {
     setCurrentDisplay(time, spO2, fiO2, hr);
 }
 
-var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
@@ -106,7 +101,6 @@ socket.on('disconnect', function(data) {
 socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');
-        document.getElementById('current-time-display').innerHTML = '00:00';
         document.getElementById('current-spo2-display').innerHTML = '???';
         return;
     } else {
@@ -120,9 +114,6 @@ socket.on('initialize', function(data) {
 });
 socket.on('update', function(data) {
     updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
-});
-socket.on('tick', function(time) {
-    document.getElementById('current-time-display').innerHTML = toDateString(time);
 });
 socket.on('reset', function(data) {
     setCurrentDisplay(data.time, data.spO2, data.fiO2);

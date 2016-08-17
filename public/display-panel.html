@@ -14,7 +14,11 @@
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
 <script src="/javascripts/c3.js"></script>
 
+
 <link type="text/css" rel="stylesheet" href="/stylesheets/display_panel.css">
+
+<script src="/javascripts/common.js"></script>
+<script src="/javascripts/displays.js"></script>
 
 </head>
 
@@ -26,7 +30,7 @@
         <div id="current-display" class="col-md-1 col-md-offset-1">
             <div class="row current-display-box">
                 <h1 class="current-display-label">Time:</h1>
-                <h2 id="current-time-display" class="current-display">00:00</h2>
+                <h2 id="current-time-display" class="current-display"></h2>
             </div>
             <div class="row current-display-box">
                 <h1 class="current-display-label hr-color">HR:</h1>
@@ -48,6 +52,9 @@
 </div>
 
 <script>
+var socket = io.connect(window.location.host);
+var apgarTime = new ReadableValue('current-time-display', 'time', socket, 'tick');
+apgarTime.listen();
 
 function updateStatusConnected() {
     var statusElem = document.getElementById('status-connection');
@@ -68,16 +75,6 @@ function updateFiO2(fiO2) {
         fiO2 = Math.round(fiO2 * 100) + '%'
     }
     document.getElementById('current-fio2-display').innerHTML = fiO2;
-}
-
-function toDateString(totalSeconds) {
-    var minutes = parseInt(totalSeconds / 60) % 60;
-    var seconds = totalSeconds % 60;
-    return (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
-}
-function fromDateString(dateString) {
-    var a = dateString.split(':');
-    return a[0] * 60 + a[1] * 1;
 }
 
 var chart = c3.generate({
@@ -175,7 +172,7 @@ var chart = c3.generate({
 });
 
 function setCurrentDisplay(time, spO2, fiO2, hr) {
-    document.getElementById('current-time-display').innerHTML = toDateString(time);
+    apgarTime.update(time);
     if (spO2 === null || isNaN(spO2)) {
         spO2 = '???';
     } else {
@@ -237,7 +234,6 @@ function updateDisplay(time, spO2, fiO2, hr) {
     setCurrentDisplay(time, spO2, fiO2, hr);
 }
 
-var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'display-panel'});
     console.log('Sockets: Connected to server.');
@@ -254,7 +250,6 @@ socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');
         chart.axis.max({x: toDateString(360)});
-        document.getElementById('current-time-display').innerHTML = '00:00';
         document.getElementById('current-spo2-display').innerHTML = '???';
         updateFiO2(0);
         return;
@@ -299,9 +294,6 @@ socket.on('initialize', function(data) {
 });
 socket.on('update', function(data) {
     updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
-});
-socket.on('tick', function(time) {
-    document.getElementById('current-time-display').innerHTML = toDateString(time);
 });
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
