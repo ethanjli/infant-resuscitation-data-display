@@ -60,7 +60,7 @@ var apgarTime = new ReadableValue('current-time-display', 'time', socket, 'tick'
 apgarTime.listen();
 var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, ecgData);
 ecg.draw();
-var ppg = new WaveformDisplay('spo2-ppg-display', '#00BA86', 2, 24, 48, ppgData);
+var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 2, 24, 48, ppgData);
 ppg.draw();
 
 function updateStatusConnected() {
@@ -114,9 +114,9 @@ var chart = c3.generate({
         },
         colors: {
             targetLower: 'black',
-            targetUpper: '#004E33',
-            SpO2: '#00BA86',
-            FiO2: 'white'
+            targetUpper: '#00AFAF',
+            SpO2: '#00FFFF',
+            FiO2: '#228B22'
         }
     },
     axis: {
