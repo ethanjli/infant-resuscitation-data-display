@@ -110,7 +110,7 @@
                                 <div class="form-group">
                                     <label for="input-hr" class="col-sm-5 control-label">Heart Rate</label>
                                     <div class="input-group col-sm-5">
-                                        <input type="number" id="input-hr" class="form-control" placeholder="0" min="0" max="200" step="1">
+                                        <input type="number" id="input-hr" class="form-control" placeholder="0" min="0" max="140" step="1">
                                         <div class="input-group-addon">bpm</div>
                                     </div>
                                 </div>
@@ -155,7 +155,7 @@ apgarTime.listen();
 var spO2 = new AdjustableValue('input-spo2', '%', socket, 'spO2');
 spO2.listen('Updating SpO2 level to ');
 spO2.monitor();
-var spO2AutoAdjuster = new AutoAdjuster(spO2, 'btn-spo2-autoincrease', 'btn-spo2-autodecrease', 1, 1);
+var spO2AutoAdjuster = new AutoAdjuster(spO2, 'btn-spo2-autoincrease', 'btn-spo2-autodecrease', 1, 2);
 spO2AutoAdjuster.monitor();
 var spO2Noise = new AdjustableValue('input-spo2-noise', '%', socket, 'spO2-noise');
 spO2Noise.listen('Updating SpO2 noise range to +/-');
