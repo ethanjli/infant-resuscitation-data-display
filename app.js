@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 var express = require('express');
 var http = require('http');
 
@@ -11,6 +13,10 @@ var socketio = require('socket.io')(server)
 server.listen(port, function() {
   console.log('[Server] Listening on port %d in %s mode', port, app.settings.env);
 });
+
+var sensors = require('./lib/sensors');
+var streaming = require('./lib/streaming')(socketio, 1, sensors);
+var sockets = require('./lib/sockets')(streaming);
 
 //app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -27,6 +33,24 @@ app.get('/minimal-display', function(req, res) {
 app.get('/control', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'control-panel.html'))
 });
+app.get('/csv', function(req, res) {
+  var samples = sensors.sampleAllPrevious();
+  if (samples === null || streaming.getStartTime() === null) {
+    res.sendStatus(204);
+  } else {
+    var csv = _.zip(samples.time, samples.spO2, samples.fiO2, samples.hr);
+    csv.unshift(['Time', 'SpO2', 'FiO2', 'HR']);
+    csv = csv.map(function(row) {
+      return row.join(', ');
+    }).join('\n');
+    var startTime = streaming.getStartTime().format('YYYYMMDD-HHmmss');
+    res.set({
+      'Content-Disposition': 'attachment; filename=tracing_' + startTime + '.csv',
+      'Content-Type': 'text/csv'
+    });
+    res.send(csv);
+  }
+})
 app.get('/favicon.ico', function(req, res) {
   res.sendStatus(200);
 });
@@ -44,7 +68,4 @@ app.use(function(err, req, res, next) {
   next(err);
 });
 
-var sensors = require('./lib/sensors');
-var streaming = require('./lib/streaming')(socketio, 1, sensors);
-var sockets = require('./lib/sockets')(streaming);
 socketio.on('connection', sockets.connection);

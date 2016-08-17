@@ -5,9 +5,13 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
 
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<script src="/javascripts/common.js"></script>
+<script src="/javascripts/controls.js"></script>
 
 <style>
 .vertical-center {
@@ -32,12 +36,42 @@
                 <hr>
                 <div class="col-md-4">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><h3 class="panel-title">Simulation State</h3></div>
+                        <div class="panel-heading"><h3 class="panel-title">Simulation</h3></div>
                         <div class="panel-body">
-                            <div class="btn-group" role="group">
-                                <button type="button" id="btn-startreset-simulation" class="btn btn-default">Start</button>
-                                <button type="button" id="btn-pauseresume-simulation" class="btn btn-default">Pause</button>
-                            </div>
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-6 control-label">Apgar time</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="apgar-time"></p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Simulation state</label>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" id="btn-startreset-simulation" class="btn btn-default">Start</button>
+                                        <button type="button" id="btn-pauseresume-simulation" class="btn btn-default">Pause</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Sensor Connection</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
+                                        <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default">Connect to Sensors in 15 Seconds</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <hr>
+                            <form action="/csv" method="get" target="_blank">
+                                <div class="row">
+                                    <label>Data Export</label>
+                                </div>
+                                <input type="submit" id="btn-download-csv" class="btn btn-default" value="Download Simulation Record">
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -45,32 +79,51 @@
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Vitals</h3></div>
                         <div class="panel-body form-horizontal">
-                            <div class="form-group">
-                                <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
-                            </div>
-                            <hr>
-                            <div class="form-group">
-                                <label for="input-spo2" class="col-sm-5 control-label">SpO<sub>2</sub> <small>(Signal Mean)</small></label>
-                                <div class="input-group col-sm-5">
-                                    <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                    <div class="input-group-addon">%</div>
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>SpO<small>2</small> Signal Parameters</label>
+                                    </div>
+                                    <label for="input-spo2" class="col-sm-5 control-label">Signal Mean</label>
+                                    <div class="input-group col-sm-5">
+                                        <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                        <div class="input-group-addon">%</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="input-spo2-noise" class="col-sm-5 control-label">SpO<sub>2</sub> Noise <small>(Signal Standard Deviation)</small></label>
-                                <div class="input-group col-sm-5">
-                                    <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                    <div class="input-group-addon">%</div>
+                                <div class="form-group">
+                                    <label for="input-spo2-noise" class="col-sm-5 control-label">Signal Standard Deviation</label>
+                                    <div class="input-group col-sm-5">
+                                        <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                        <div class="input-group-addon">%</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <hr>
-                            <div class="form-group">
-                                <label for="input-hr" class="col-sm-5 control-label">Heart Rate</label>
-                                <div class="input-group col-sm-5">
-                                    <input type="number" id="input-hr" class="form-control" placeholder="0" min="0" max="200" step="1">
-                                    <div class="input-group-addon">bpm</div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Auto-Adjust Signal Mean</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-spo2-autoincrease" class="btn btn-default"></button>
+                                        <button type="button" id="btn-spo2-autodecrease" class="btn btn-default"></button>
+                                    </div>
                                 </div>
-                            </div>
+                                <hr>
+                                <div class="form-group">
+                                    <label for="input-hr" class="col-sm-5 control-label">Heart Rate</label>
+                                    <div class="input-group col-sm-5">
+                                        <input type="number" id="input-hr" class="form-control" placeholder="0" min="0" max="200" step="1">
+                                        <div class="input-group-addon">bpm</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Auto-Adjust Heart Rate</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-hr-autoincrease" class="btn btn-default"></button>
+                                        <button type="button" id="btn-hr-autodecrease" class="btn btn-default"></button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -78,13 +131,15 @@
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Air Supply</h3></div>
                         <div class="panel-body form-horizontal">
-                            <div class="form-group">
-                                <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
-                                <div class="input-group col-sm-5">
-                                    <input type="number" id="input-fio2" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                    <div class="input-group-addon">%</div>
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
+                                    <div class="input-group col-sm-5">
+                                        <input type="number" id="input-fio2" class="form-control" placeholder="0" min="0" max="100" step="1">
+                                        <div class="input-group-addon">%</div>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -94,6 +149,25 @@
 </div>
 
 <script>
+var socket = io.connect(window.location.host);
+var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
+apgarTime.listen();
+var spO2 = new AdjustableValue('input-spo2', '%', socket, 'spO2');
+spO2.listen('Updating SpO2 level to ');
+spO2.monitor();
+var spO2AutoAdjuster = new AutoAdjuster(spO2, 'btn-spo2-autoincrease', 'btn-spo2-autodecrease', 1, 1);
+spO2AutoAdjuster.monitor();
+var spO2Noise = new AdjustableValue('input-spo2-noise', '%', socket, 'spO2-noise');
+spO2Noise.listen('Updating SpO2 noise range to +/-');
+spO2Noise.monitor();
+var hr = new AdjustableValue('input-hr', ' bpm', socket, 'hr');
+hr.listen('Updating HR to ');
+hr.monitor();
+var hrAutoAdjuster = new AutoAdjuster(hr, 'btn-hr-autoincrease', 'btn-hr-autodecrease', 5, 2);
+hrAutoAdjuster.monitor();
+var fiO2 = new AdjustableValue('input-fio2', '%', socket, 'fiO2');
+fiO2.listen('Updating FiO2 level to ');
+fiO2.monitor();
 
 function updateStatusConnected() {
     var statusElem = document.getElementById('status-connection');
@@ -145,18 +219,22 @@ function updateStatusHardwareDisconnected() {
 function updateSimulationStarted() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    var downloadBtn = document.getElementById('btn-download-csv');
     startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Reset';
     pauseResumeBtn.disabled = '';
     pauseResumeBtn.innerHTML = 'Pause';
+    downloadBtn.disabled = '';
 }
 function updateSimulationReady() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
     var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
+    var downloadBtn = document.getElementById('btn-download-csv');
     startResetBtn.disabled = '';
     startResetBtn.innerHTML = 'Start';
     pauseResumeBtn.disabled = 'disabled';
     pauseResumeBtn.innerHTML = 'Pause';
+    downloadBtn.disabled = 'disabled';
 }
 function updateSimulationPaused() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
@@ -168,31 +246,19 @@ function updateSimulationPaused() {
 }
 function updateSensorConnection(sensorConnection) {
     var sensorConnectionBtn = document.getElementById('btn-connectdisconnect-sensors');
+    var delayedSensorConnectionBtn = document.getElementById('btn-delayedconnect-sensors');
     if (sensorConnection) {
         sensorConnectionBtn.innerHTML = 'Disconnect Sensors';
+        delayedSensorConnectionBtn.innerHTML = 'Connected to Sensors';
+        delayedSensorConnectionBtn.disabled = 'disabled';
     } else {
         sensorConnectionBtn.innerHTML = 'Connect Sensors';
+        delayedSensorConnectionBtn.innerHTML = 'Connect to Sensors in 15 Seconds';
+        delayedSensorConnectionBtn.disabled = '';
     }
     sensorConnectionBtn.disabled = '';
 }
-function updateSpO2(spO2) {
-    var spO2Elem = document.getElementById('input-spo2');
-    spO2Elem.value = Math.round(spO2 * 100);
-}
-function updateSpO2Noise(spO2Noise) {
-    var spO2NoiseElem = document.getElementById('input-spo2-noise');
-    spO2NoiseElem.value = Math.round(spO2Noise * 100);
-}
-function updateFiO2(fiO2) {
-    var fiO2Elem = document.getElementById('input-fio2');
-    fiO2Elem.value = Math.round(fiO2 * 100);
-}
-function updateHR(hr) {
-    var hrElem = document.getElementById('input-hr');
-    hrElem.value = hr;
-}
 
-var socket = io.connect(window.location.host);
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'control-panel'});
     console.log('Sockets: Connected to server.');
@@ -253,22 +319,6 @@ socket.on('sensor-connection', function(data) {
     }
     updateSensorConnection(data);
 });
-socket.on('spO2', function(data) {
-    console.log('Sockets: Updating SpO2 level to ' + data + '.');
-    updateSpO2(data);
-});
-socket.on('spO2-noise', function(data) {
-    console.log('Sockets: Updating SpO2 noise range to +/- ' + data + '.');
-    updateSpO2Noise(data);
-});
-socket.on('fiO2', function(data) {
-    console.log('Sockets: Updating FiO2 level to ' + data + '.');
-    updateFiO2(data);
-});
-socket.on('hr', function(data) {
-    console.log('Sockets: Updating HR to ' + data + '.');
-    updateHR(data);
-});
 
 document.getElementById('btn-startreset-simulation').onclick = function() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
@@ -294,29 +344,47 @@ document.getElementById('btn-pauseresume-simulation').onclick = function() {
 };
 document.getElementById('btn-connectdisconnect-sensors').onclick = function() {
     var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
+    var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');
     if (sensorsBtn.innerHTML === 'Connect Sensors') {
         socket.emit('sensor-connection', true);
+        delayedSensorBtn.innerHTML = 'Connected to Sensors';
+        delayedSensorBtn.disabled = 'disabled';
     } else if (sensorsBtn.innerHTML === 'Disconnect Sensors') {
+        delayedSensorBtn.innerHTML = 'Connect Sensors in 15 Seconds';
         socket.emit('sensor-connection', false);
     }
     sensorsBtn.disabled = 'disabled';
 };
-document.getElementById('input-spo2').onchange = function() {
-    var spO2Elem = document.getElementById('input-spo2');
-    socket.emit('spO2', spO2Elem.value / 100);
+document.getElementById('btn-delayedconnect-sensors').onclick = function() {
+    var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
+    var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');
+    var delay = 15;
+    for (i = 1; i < delay; i++) {
+        setTimeout((function(countdown) {
+            console.log('Connecting in ' + (15 - countdown) + 's...');
+            delayedSensorBtn.innerHTML = 'Connecting in ' + (15 - countdown) + 's...';
+        }).bind(this, i), i * 1000);
+    }
+    setTimeout(function() {
+        socket.emit('sensor-connection', true);
+        delayedSensorBtn.innerHTML = 'Connected to Sensors';
+    }, delay * 1000);
+    delayedSensorBtn.disabled = 'disabled';
+    sensorsBtn.disabled = 'disabled';
 };
-document.getElementById('input-spo2-noise').onchange = function() {
-    var spO2NoiseElem = document.getElementById('input-spo2-noise');
-    socket.emit('spO2-noise', spO2NoiseElem.value / 100);
-};
-document.getElementById('input-fio2').onchange = function() {
-    var fiO2Elem = document.getElementById('input-fio2');
-    socket.emit('fiO2', fiO2Elem.value / 100);
-};
-document.getElementById('input-hr').onchange = function() {
-    var hrElem = document.getElementById('input-hr');
-    socket.emit('hr', hrElem.value);
-};
+
+$(function() {
+    $(':input[type="number"]').on('mousewheel', function(event) {
+        event.target.value = parseInt(event.target.value) + event.deltaY;
+        if (event.target.min !== undefined) {
+            event.target.value = Math.max(event.target.min, event.target.value);
+        }
+        if (event.target.max !== undefined) {
+            event.target.value = Math.min(event.target.max, event.target.value);
+        }
+        event.target.onchange();
+    });
+});
 
 </script>
 
