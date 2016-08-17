@@ -86,7 +86,7 @@ h1, h2, h3 {
 .hr-color {
     color: #F0E442;
 }
-.current-display-box {
-    margin-top: -20px;
-    margin-bottom: 40px;
+
+canvas .display-waveform {
+    background-color: black;
 }
