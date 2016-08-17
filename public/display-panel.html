@@ -58,9 +58,9 @@
 var socket = io.connect(window.location.host);
 var apgarTime = new ReadableValue('current-time-display', 'time', socket, 'tick');
 apgarTime.listen();
-var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, ecgData);
+var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, 0.5, ecgData);
 ecg.draw();
-var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 2, 24, 48, ppgData);
+var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 2, 24, 48, 0.5, ppgData);
 ppg.draw();
 
 function updateStatusConnected() {
@@ -182,19 +182,21 @@ function setCurrentDisplay(time, spO2, fiO2, hr) {
     apgarTime.update(time);
     if (spO2 === null || isNaN(spO2)) {
         spO2 = '???';
-        ecg.disconnect();
     } else {
         spO2 = Math.round(spO2 * 100) + '%';
-        ecg.connect();
     }
     document.getElementById('current-spo2-display').innerHTML = spO2;
     updateFiO2(fiO2);
     if (hr === null || isNaN(hr)) {
         hr = '???';
+        ecg.disconnect();
         ppg.disconnect();
     } else {
         hr = Math.round(hr);
+        ecg.connect();
         ppg.connect();
+        ecg.setFrequency(hr);
+        ppg.setFrequency(hr);
     }
     document.getElementById('current-hr-display').innerHTML = hr;
 }
@@ -234,8 +236,8 @@ function updateDisplay(time, spO2, fiO2, hr) {
                 }
                 chart.ygrids([
                     {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
-                    {value: spO2 + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
-                    {value: fiO2 + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+                    //{value: spO2 + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+                    //{value: fiO2 + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
                 ]);
             }
         }
@@ -287,8 +289,8 @@ socket.on('initialize', function(data) {
     }
     chart.ygrids([
         {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
-        {value: data.spO2[data.spO2.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
-        {value: data.fiO2[data.fiO2.length - 1] + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+        //{value: data.spO2[data.spO2.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+        //{value: data.fiO2[data.fiO2.length - 1] + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
     ]);
     chart.load({
         columns: [
