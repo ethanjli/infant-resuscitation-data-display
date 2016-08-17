@@ -41,7 +41,7 @@
                                 <div class="form-group">
                                     <label class="col-sm-6 control-label">Apgar time</label>
                                     <div class="col-sm-6">
-                                        <p class="form-control-static" id="apgar-time">00:00</p>
+                                        <p class="form-control-static" id="apgar-time"></p>
                                     </div>
                                 </div>
                                 <hr>
@@ -149,6 +149,8 @@
 
 <script>
 var socket = io.connect(window.location.host);
+var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
+apgarTime.listen();
 var spO2 = new AdjustableValue('input-spo2', '%', socket, 'spO2');
 spO2.listen('Updating SpO2 level to ');
 spO2.monitor();
@@ -255,15 +257,6 @@ function updateSensorConnection(sensorConnection) {
     }
     sensorConnectionBtn.disabled = '';
 }
-function toDateString(totalSeconds) {
-    var minutes = parseInt(totalSeconds / 60) % 60;
-    var seconds = totalSeconds % 60;
-    return (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
-}
-function updateTime(time) {
-    var timeElem = document.getElementById('apgar-time');
-    timeElem.innerHTML = toDateString(time);
-}
 
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'control-panel'});
@@ -325,7 +318,6 @@ socket.on('sensor-connection', function(data) {
     }
     updateSensorConnection(data);
 });
-socket.on('tick', updateTime);
 
 document.getElementById('btn-startreset-simulation').onclick = function() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');
