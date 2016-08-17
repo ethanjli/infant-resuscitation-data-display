@@ -196,12 +196,10 @@ function setCurrentDisplay(time, spO2, fiO2, hr) {
 
 function updateDisplay(time, spO2, fiO2, hr) {
     var dateString = toDateString(time);
-    $("#chart .c3-ygrid-line.spO2-target-label").addClass('c3-ygrid-line-hidden');
     if (time > 360) {
         chart.axis.tickFit(true);
         chart.axis.tickValues(undefined);
         chart.axis.tickCount(11);
-        $("#chart .c3-ygrid-line").addClass('c3-ygrid-line-hidden');
     }
     if (spO2 === null) {
         spO2 = NaN;
@@ -275,8 +273,6 @@ socket.on('initialize', function(data) {
         chart.axis.tickFit(true);
         chart.axis.tickValues(undefined);
         chart.axis.tickCount(11);
-        $("#chart .c3-ygrid-line.spO2-label").addClass('c3-ygrid-line-hidden');
-        $("#chart .c3-ygrid-line.fiO2-label").addClass('c3-ygrid-line-hidden');
         annotationDeltaY = -0.02;
     } else {
         chart.axis.max({x: toDateString(360)});
@@ -289,7 +285,6 @@ socket.on('initialize', function(data) {
         {value: data.spO2[data.spO2.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
         {value: data.fiO2[data.fiO2.length - 1] + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
     ]);
-    $("#chart .c3-ygrid-line.spO2-target-label").addClass('c3-ygrid-line-hidden');
     chart.load({
         columns: [
             time,
