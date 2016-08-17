@@ -14,6 +14,7 @@
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
 <script src="/javascripts/c3.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.2/p5.min.js"></script>
 
 <link type="text/css" rel="stylesheet" href="/stylesheets/display_panel.css">
 
@@ -59,7 +60,7 @@ var apgarTime = new ReadableValue('current-time-display', 'time', socket, 'tick'
 apgarTime.listen();
 var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, ecgData);
 ecg.draw();
-var ppg = new WaveformDisplay('spo2-ppg-display', '#00BA86', 2, 20, 40, ppgData);
+var ppg = new WaveformDisplay('spo2-ppg-display', '#00BA86', 2, 24, 48, ppgData);
 ppg.draw();
 
 function updateStatusConnected() {
