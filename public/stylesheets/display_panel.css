@@ -74,10 +74,10 @@ h1, h2, h3 {
     line-height: 0.5;
 }
 .spo2-color {
-    color: #00BA86;
+    color: #00FFFF;
 }
 .fio2-color {
-    color: white;
+    color: #32CD32;
 }
 .hr-color {
     color: #F0E442;
