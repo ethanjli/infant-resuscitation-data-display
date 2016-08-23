@@ -10,6 +10,9 @@
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/machina.js/2.0.0/machina.min.js"></script>
+
 <script src="/javascripts/common.js"></script>
 <script src="/javascripts/controls.js"></script>
 
@@ -150,21 +153,36 @@
 
 <script>
 var socket = io.connect(window.location.host);
+
 var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
 apgarTime.listen();
+
 var spO2 = new AdjustableValue('input-spo2', '%', socket, 'spO2');
 spO2.listen('Updating SpO2 level to ');
 spO2.monitor();
-var spO2AutoAdjuster = new AutoAdjuster(spO2, 'btn-spo2-autoincrease', 'btn-spo2-autodecrease', 1, 2);
-spO2AutoAdjuster.monitor();
+var spO2AutoAdjuster = new AutoAdjuster({
+    adjustableValue: spO2,
+    autoIncreaseBtn: 'btn-spo2-autoincrease',
+    autoDecreaseBtn: 'btn-spo2-autodecrease',
+    incrementStep: 1,
+    timeStep: 2
+});
+
 var spO2Noise = new AdjustableValue('input-spo2-noise', '%', socket, 'spO2-noise');
 spO2Noise.listen('Updating SpO2 noise range to +/-');
 spO2Noise.monitor();
+
 var hr = new AdjustableValue('input-hr', ' bpm', socket, 'hr');
 hr.listen('Updating HR to ');
 hr.monitor();
-var hrAutoAdjuster = new AutoAdjuster(hr, 'btn-hr-autoincrease', 'btn-hr-autodecrease', 5, 2);
-hrAutoAdjuster.monitor();
+var hrAutoAdjuster = new AutoAdjuster({
+    adjustableValue: hr,
+    autoIncreaseBtn: 'btn-hr-autoincrease',
+    autoDecreaseBtn: 'btn-hr-autodecrease',
+    incrementStep: 5,
+    timeStep: 2
+});
+
 var fiO2 = new AdjustableValue('input-fio2', '%', socket, 'fiO2');
 fiO2.listen('Updating FiO2 level to ');
 fiO2.monitor();
@@ -200,21 +218,19 @@ function updateStatusDisplaysDisconnected() {
 }
 function updateStatusHardwareConnected(numDisplays) {
     var statusElem = document.getElementById('status-hardware');
-    var fiO2Elem = document.getElementById('input-fio2');
     if (numDisplays > 1) {
         statusElem.innerHTML = numDisplays + ' hardware interfaces connected to server';
     } else if (numDisplays === 1) {
         statusElem.innerHTML = 'Hardware interface connected to server';
     }
-    fiO2Elem.setAttribute('readonly', 'readonly');
+    fiO2.setReadOnly();
     statusElem.className = 'label label-success';
 }
 function updateStatusHardwareDisconnected() {
     var statusElem = document.getElementById('status-hardware');
-    var fiO2Elem = document.getElementById('input-fio2');
     statusElem.innerHTML = 'No hardware interface connected to server';
     statusElem.className = 'label label-warning';
-    fiO2Elem.removeAttribute('readonly');
+    fiO2.setWritable();
 }
 function updateSimulationStarted() {
     var startResetBtn = document.getElementById('btn-startreset-simulation');

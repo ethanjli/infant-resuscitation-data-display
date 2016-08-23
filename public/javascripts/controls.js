@@ -7,8 +7,7 @@ function AdjustableValue(inputElemId, units, socket, messageName) {
     this.messageName = messageName;
 }
 AdjustableValue.prototype.update = function(newValue, emit) {
-    if (this.min !== undefined) newValue = Math.max(this.min, newValue);
-    if (this.max !== undefined) newValue = Math.min(this.max, newValue);
+    value = clamp(newValue, this.min, this.max);
     this.inputElem.value = newValue;
     this.afterUpdate();
     if (emit) {
@@ -25,96 +24,164 @@ AdjustableValue.prototype.listen = function(updateMessage) {
 }
 AdjustableValue.prototype.monitor = function() {
     this.inputElem.onchange = (function() {
-        var value = this.inputElem.value;
+        var value = this.getValue();
         if (this.units === '%') value /= 100;
         this.afterUpdate();
         this.socket.emit(this.messageName, value);
     }).bind(this);
 }
 AdjustableValue.prototype.getValue = function() {
-    return parseInt(this.inputElem.value);
+    var value = clamp(this.inputElem.value, this.min, this.max);
+    return parseInt(value);
+}
+AdjustableValue.prototype.atMax = function() {
+    return this.getValue() >= this.max;
+}
+AdjustableValue.prototype.atMin = function() {
+    return this.getValue() <= this.min;
+}
+AdjustableValue.prototype.setReadOnly = function() {
+    this.inputElem.setAttribute('readonly', 'readonly');
+}
+AdjustableValue.prototype.setWritable = function() {
+    this.inputElem.removeAttribute('readonly');
 }
 
-function AutoAdjuster(adjustableValue, autoIncrementBtnId, autoDecrementBtnId, increment, timeStep) {
-    this.adjustableValue = adjustableValue;
-    this.adjustableValue.afterUpdate = this.afterUpdate.bind(this);
-    this.autoIncrementBtn = document.getElementById(autoIncrementBtnId);
-    this.autoDecrementBtn = document.getElementById(autoDecrementBtnId);
-    this.increment = increment;
-    this.timeStep = timeStep;
-    var timeStepString;
-    if (timeStep === 1) timeStepString = 'sec';
-    else timeStepString = timeStep + ' sec';
-    this.timeStepString = timeStepString;
-    var units = adjustableValue.units;
-    this.increaseString = 'Increase by ' + increment + units + '/' + timeStepString;
-    this.decreaseString = 'Decrease by ' + increment + units + '/' + timeStepString;
-    this.noIncreaseString = 'Can\'t Increase Beyond ' + adjustableValue.max + units;
-    this.noDecreaseString = 'Can\'t Decrease Beyond ' + adjustableValue.min + units;
+var AutoAdjusterBehavior = new machina.BehavioralFsm({
+    namespace: 'AutoAdjuster',
+    initialState: 'uninitialized',
+    states: {
+        uninitialized: {
+            '*': function(client) {
+                if (client.adjustableValue.atMax()) {
+                    this.transition(client, 'max');
+                } else if (client.adjustableValue.atMin()) {
+                    this.transition(client, 'min');
+                } else {
+                    this.transition(client, 'stopped');
+                }
+            }
+        },
+        max: {
+            _onEnter: function(client) {
+                client.autoIncreaseBtn.innerHTML = client.getMaxString();
+                client.autoIncreaseBtn.disabled = 'disabled';
+                client.autoDecreaseBtn.innerHTML = client.getDecreaseString();
+                client.autoDecreaseBtn.disabled = '';
+            },
+            _onExit: function(client) {
+                client.autoIncreaseBtn.disabled = '';
+                client.autoDecreaseBtn.disabled = '';
+            },
+            atMin: 'min',
+            neitherMaxNorMin: 'stopped',
+            clickDecreasing: 'decreasing'
+        },
+        min: {
+            _onEnter: function(client) {
+                client.autoIncreaseBtn.innerHTML = client.getIncreaseString();
+                client.autoIncreaseBtn.disabled = '';
+                client.autoDecreaseBtn.innerHTML = client.getMinString();
+                client.autoDecreaseBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+                client.autoIncreaseBtn.disabled = '';
+                client.autoDecreaseBtn.disabled = '';
+            },
+            atMax: 'max',
+            neitherMaxNorMin: 'stopped',
+            clickIncreasing: 'increasing'
+        },
+        stopped: {
+            _onEnter: function(client) {
+                client.autoIncreaseBtn.innerHTML = client.getIncreaseString();
+                client.autoDecreaseBtn.innerHTML = client.getDecreaseString();
+            },
+            atMax: 'max',
+            atMin: 'min',
+            clickIncreasing: 'increasing',
+            clickDecreasing: 'decreasing'
+        },
+        increasing: {
+            _onEnter: function(client) {
+                client.autoIncreaseBtn.innerHTML = client.stopIncreaseString;
+                client.autoDecreaseBtn.innerHTML = client.getDecreaseString();
+                client.autoAdjustTimer = setInterval(client.increment.bind(client),
+                                                     1000 * client.timeStep);
+            },
+            _onExit: function(client) {
+                clearTimeout(client.autoAdjustTimer);
+            },
+            atMax: 'max',
+            clickIncreasing: 'stopped',
+            clickDecreasing: 'decreasing'
+        },
+        decreasing: {
+            _onEnter: function(client) {
+                client.autoIncreaseBtn.innerHTML = client.getIncreaseString();
+                client.autoDecreaseBtn.innerHTML = client.stopDecreaseString;
+                client.autoAdjustTimer = setInterval(client.decrement.bind(client),
+                                                     1000 * client.timeStep);
+            },
+            _onExit: function(client) {
+                clearTimeout(client.autoAdjustTimer);
+            },
+            atMin: 'min',
+            clickIncreasing: 'increasing',
+            clickDecreasing: 'stopped'
+        }
+    },
+    updateValue: function(client) {
+        if (client.adjustableValue.atMax()) this.handle(client, 'atMax');
+        else if (client.adjustableValue.atMin()) this.handle(client, 'atMin');
+        else this.handle(client, 'neitherMaxNorMin');
+    },
+    clickIncreasing: function(client) {
+        this.handle(client, 'clickIncreasing');
+    },
+    clickDecreasing: function(client) {
+        this.handle(client, 'clickDecreasing');
+    }
+});
+
+
+function AutoAdjuster(options) {
+    this.adjustableValue = options.adjustableValue;
+    this.autoIncreaseBtn = document.getElementById(options.autoIncreaseBtn);
+    this.autoDecreaseBtn = document.getElementById(options.autoDecreaseBtn);
+    this.incrementStep = options.incrementStep;
+    this.timeStep = options.timeStep;
     this.stopIncreaseString = 'Stop Auto-Increasing';
     this.stopDecreaseString = 'Stop Auto-Decreasing';
-    this.autoIncrementBtn.innerHTML = this.increaseString;
-    this.autoDecrementBtn.innerHTML = this.decreaseString;
+    this.autoAdjustTimer = null;
+
+    this.adjustableValue.afterUpdate = AutoAdjusterBehavior.updateValue.bind(AutoAdjusterBehavior, this);
+    this.autoIncreaseBtn.onclick = AutoAdjusterBehavior.clickIncreasing.bind(AutoAdjusterBehavior, this);
+    this.autoDecreaseBtn.onclick = AutoAdjusterBehavior.clickDecreasing.bind(AutoAdjusterBehavior, this);
 }
-AutoAdjuster.prototype.afterUpdate = function() {
-    var autoIncrementBtn = this.autoIncrementBtn;
-    var autoDecrementBtn = this.autoDecrementBtn;
-    var value = this.adjustableValue.getValue();
-    var max = this.adjustableValue.max;
-    var min = this.adjustableValue.min;
-    var units = this.adjustableValue.units;
-    if (value >= max) {
-        autoIncrementBtn.innerHTML = this.noIncreaseString;
-        autoIncrementBtn.disabled = 'disabled';
-        autoDecrementBtn.innerHTML = this.decreaseString;
-        autoDecrementBtn.disabled = '';
-        clearInterval(this.autoAdjustTimer);
-    } else if (value <= min) {
-        autoDecrementBtn.innerHTML = this.noDecreaseString;
-        autoDecrementBtn.disabled = 'disabled';
-        autoIncrementBtn.innerHTML = this.increaseString;
-        autoIncrementBtn.disabled = '';
-        clearInterval(this.autoAdjustTimer);
-    } else {
-        if (autoIncrementBtn.innerHTML === this.noIncreaseString) {
-            autoIncrementBtn.innerHTML = this.increaseString;
-            autoIncrementBtn.disabled = '';
-        }
-        if (autoDecrementBtn.innerHTML === this.noDecreaseString) {
-            autoIncrementBtn.innerHTML = this.decreaseString;
-            autoDecrementBtn.disabled = '';
-        }
-    }
+AutoAdjuster.prototype.getTimeStepString = function() {
+    if (this.timeStep == 1) return 'sec';
+    else return this.timeStep + ' sec';
 }
-AutoAdjuster.prototype.monitor = function() {
-    var value = this.adjustableValue;
-    var autoIncrementBtn = this.autoIncrementBtn;
-    var autoDecrementBtn = this.autoDecrementBtn;
-    autoIncrementBtn.onclick = (function() {
-        clearInterval(this.autoAdjustTimer);
-        if (autoIncrementBtn.innerHTML === this.increaseString) {
-            autoIncrementBtn.innerHTML = this.stopIncreaseString;
-            autoDecrementBtn.innerHTML = this.decreaseString;
-            autoDecrementBtn.disabled = '';
-            this.autoAdjustTimer = setInterval((function() {
-                console.log('Incrementing');
-                value.update(value.getValue() + this.increment, true);
-            }).bind(this), 1000 * this.timeStep);
-        } else if (autoIncrementBtn.innerHTML === this.stopIncreaseString) {
-            autoIncrementBtn.innerHTML = this.increaseString;
-        }
-    }).bind(this);
-    autoDecrementBtn.onclick = (function() {
-        clearInterval(this.autoAdjustTimer);
-        if (autoDecrementBtn.innerHTML === this.decreaseString) {
-            autoDecrementBtn.innerHTML = this.stopDecreaseString;
-            autoIncrementBtn.innerHTML = this.increaseString;
-            autoIncrementBtn.disabled = '';
-            this.autoAdjustTimer = setInterval((function() {
-                value.update(value.getValue() - this.increment, true);
-            }).bind(this), 1000 * this.timeStep);
-        } else if (autoDecrementBtn.innerHTML === this.stopDecreaseString) {
-            autoDecrementBtn.innerHTML = this.decreaseString;
-        }
-    }).bind(this);
+AutoAdjuster.prototype.getRateString = function() {
+    return this.incrementStep + this.adjustableValue.units + '/' + this.getTimeStepString();
 }
+AutoAdjuster.prototype.getIncreaseString = function() {
+    return 'Increase by ' + this.getRateString();
+}
+AutoAdjuster.prototype.getDecreaseString = function() {
+    return 'Decrease by ' + this.getRateString();
+}
+AutoAdjuster.prototype.getMaxString = function() {
+    return 'Can\'t Increase Beyond ' + this.adjustableValue.max + this.adjustableValue.units;
+}
+AutoAdjuster.prototype.getMinString = function() {
+    return 'Can\'t Decrease Beyond ' + this.adjustableValue.min + this.adjustableValue.units;
+}
+AutoAdjuster.prototype.increment = function() {
+    this.adjustableValue.update(this.adjustableValue.getValue() + this.incrementStep, true);
+}
+AutoAdjuster.prototype.decrement = function() {
+    this.adjustableValue.update(this.adjustableValue.getValue() - this.incrementStep, true);
+}
+
