@@ -154,6 +154,13 @@
 <script>
 var socket = io.connect(window.location.host);
 
+var simulation = new Simulation({
+    socket: socket,
+    startResetBtn: 'btn-startreset-simulation',
+    pauseResumeBtn: 'btn-pauseresume-simulation',
+    downloadBtn: 'btn-download-csv'
+});
+
 var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
 apgarTime.listen();
 
@@ -232,34 +239,6 @@ function updateStatusHardwareDisconnected() {
     statusElem.className = 'label label-warning';
     fiO2.setWritable();
 }
-function updateSimulationStarted() {
-    var startResetBtn = document.getElementById('btn-startreset-simulation');
-    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
-    var downloadBtn = document.getElementById('btn-download-csv');
-    startResetBtn.disabled = '';
-    startResetBtn.innerHTML = 'Reset';
-    pauseResumeBtn.disabled = '';
-    pauseResumeBtn.innerHTML = 'Pause';
-    downloadBtn.disabled = '';
-}
-function updateSimulationReady() {
-    var startResetBtn = document.getElementById('btn-startreset-simulation');
-    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
-    var downloadBtn = document.getElementById('btn-download-csv');
-    startResetBtn.disabled = '';
-    startResetBtn.innerHTML = 'Start';
-    pauseResumeBtn.disabled = 'disabled';
-    pauseResumeBtn.innerHTML = 'Pause';
-    downloadBtn.disabled = 'disabled';
-}
-function updateSimulationPaused() {
-    var startResetBtn = document.getElementById('btn-startreset-simulation');
-    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
-    startResetBtn.disabled = '';
-    startResetBtn.innerHTML = 'Reset';
-    pauseResumeBtn.disabled = '';
-    pauseResumeBtn.innerHTML = 'Resume';
-}
 function updateSensorConnection(sensorConnection) {
     var sensorConnectionBtn = document.getElementById('btn-connectdisconnect-sensors');
     var delayedSensorConnectionBtn = document.getElementById('btn-delayedconnect-sensors');
@@ -283,6 +262,7 @@ socket.on('connect', function(data) {
 socket.on('disconnect', function(data) {
     console.log('Sockets: Disconnected from server.');
     updateStatusDisconnected();
+    SimulationBehavior.disconnect(simulation);
 });
 socket.on('control-connection-info', function(data) {
     if (data > 1) {
@@ -305,28 +285,6 @@ socket.on('hardware-connection-info', function(data) {
         updateStatusHardwareDisconnected();
     }
 });
-socket.on('simulation-state-info', function(data) {
-    console.log('Sockets: Simulation state is: ' + data);
-    if (data === 'ready') {
-        updateSimulationReady();
-    } else if (data === 'running') {
-        updateSimulationStarted();
-    } else if (data === 'stopped') {
-        updateSimulationPaused();
-    }
-});
-socket.on('start', function(data) {
-    console.log('Sockets: Starting simulation.');
-    updateSimulationStarted();
-});
-socket.on('reset', function(data) {
-    console.log('Sockets: Resetting simuluation.');
-    updateSimulationReady();
-});
-socket.on('stop', function(data) {
-    console.log('Sockets: Stopping simuluation.');
-    updateSimulationPaused();
-});
 socket.on('sensor-connection', function(data) {
     if (data) {
         console.log('Sockets: Connecting sensors');
@@ -336,28 +294,6 @@ socket.on('sensor-connection', function(data) {
     updateSensorConnection(data);
 });
 
-document.getElementById('btn-startreset-simulation').onclick = function() {
-    var startResetBtn = document.getElementById('btn-startreset-simulation');
-    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
-    if (startResetBtn.innerHTML === 'Start') {
-        socket.emit('start');
-    } else if (startResetBtn.innerHTML === 'Reset') {
-        socket.emit('reset');
-    }
-    startResetBtn.disabled = 'disabled';
-    pauseResumeBtn.disabled = 'disabled';
-};
-document.getElementById('btn-pauseresume-simulation').onclick = function() {
-    var startResetBtn = document.getElementById('btn-startreset-simulation');
-    var pauseResumeBtn = document.getElementById('btn-pauseresume-simulation');
-    if (pauseResumeBtn.innerHTML === 'Pause') {
-        socket.emit('stop');
-    } else if (pauseResumeBtn.innerHTML === 'Resume') {
-        socket.emit('start');
-    }
-    startResetBtn.disabled = 'disabled';
-    pauseResumeBtn.disabled = 'disabled';
-};
 document.getElementById('btn-connectdisconnect-sensors').onclick = function() {
     var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
     var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');

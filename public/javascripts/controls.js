@@ -185,3 +185,125 @@ AutoAdjuster.prototype.decrement = function() {
     this.adjustableValue.update(this.adjustableValue.getValue() - this.incrementStep, true);
 }
 
+var SimulationBehavior = new machina.BehavioralFsm({
+    namespace: 'Simulation',
+    initialState: 'ready',
+    states: {
+        ready: {
+            _onEnter: function(client) {
+                client.startResetBtn.innerHTML = 'Start';
+                client.startResetBtn.disabled = '';
+                client.pauseResumeBtn.disabled = 'disabled';
+                client.downloadBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+                client.startResetBtn.innerHTML = 'Reset';
+                client.pauseResumeBtn.disabled = '';
+                client.downloadBtn.disabled = '';
+            },
+            start: 'running',
+            pause: 'paused',
+            clickStartReset: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('start');
+            },
+            disconnect: 'waitingForResponse'
+        },
+        running: {
+            reset: 'ready',
+            pause: 'paused',
+            clickStartReset: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('reset');
+            },
+            clickPauseResume: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('stop');
+            },
+            disconnect: 'waitingForResponse'
+        },
+        paused: {
+            _onEnter: function(client) {
+                client.pauseResumeBtn.innerHTML = 'Resume';
+            },
+            _onExit: function(client) {
+                client.pauseResumeBtn.innerHTML = 'Pause';
+            },
+            reset: 'ready',
+            start: 'running',
+            clickStartReset: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('reset');
+            },
+            clickPauseResume: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('start');
+            },
+            disconnect: 'waitingForResponse'
+        },
+        waitingForResponse: {
+            _onEnter: function(client) {
+                client.startResetBtn.disabled = 'disabled';
+                client.pauseResumeBtn.disabled = 'disabled';
+                client.downloadBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+                client.startResetBtn.disabled = '';
+                client.pauseResumeBtn.disabled = '';
+                client.downloadBtn.disabled = '';
+            },
+            reset: 'ready',
+            start: 'running',
+            pause: 'paused'
+        }
+    },
+    reset: function(client) {
+        this.handle(client, 'reset');
+    },
+    start: function(client) {
+        this.handle(client, 'start');
+    },
+    pause: function(client) {
+        this.handle(client, 'pause');
+    },
+    clickStartReset: function(client) {
+        this.handle(client, 'clickStartReset');
+    },
+    clickPauseResume: function(client) {
+        this.handle(client, 'clickPauseResume');
+    },
+    disconnect: function(client) {
+        this.handle(client, 'disconnect');
+    }
+});
+function Simulation(options) {
+    this.socket = options.socket;
+    this.startResetBtn = document.getElementById(options.startResetBtn);
+    this.pauseResumeBtn = document.getElementById(options.pauseResumeBtn);
+    this.downloadBtn = document.getElementById(options.downloadBtn);
+
+    this.socket.on('start', (function() {
+        console.log('Sockets: Starting simulation.');
+        SimulationBehavior.start(this);
+    }).bind(this));
+    this.socket.on('reset', (function() {
+        console.log('Sockets: Resetting simuluation.');
+        SimulationBehavior.reset(this);
+    }).bind(this));
+    this.socket.on('stop', (function() {
+        console.log('Sockets: Stopping simuluation.');
+        SimulationBehavior.pause(this);
+    }).bind(this));
+    this.socket.on('simulation-state-info', function(data) {
+        console.log('Sockets: Simulation state is: ' + data);
+        if (data === 'ready') {
+            SimulationBehavior.reset(simulation);
+        } else if (data === 'running') {
+            SimulationBehavior.start(simulation);
+        } else if (data === 'stopped') {
+            SimulationBehavior.pause(simulation);
+        }
+    })
+    this.startResetBtn.onclick = SimulationBehavior.clickStartReset.bind(SimulationBehavior, this);
+    this.pauseResumeBtn.onclick = SimulationBehavior.clickPauseResume.bind(SimulationBehavior, this);
+}
