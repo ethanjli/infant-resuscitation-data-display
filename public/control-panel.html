@@ -251,12 +251,24 @@ socket.on('connect', function(data) {
     socket.emit('connected', {client: 'control-panel'});
     console.log('Sockets: Connected to server.');
     updateStatusConnected();
+    spO2.setWritable();
+    AutoAdjusterBehavior.connectSocket(spO2AutoAdjuster);
+    spO2Noise.setWritable();
+    hr.setWritable();
+    AutoAdjusterBehavior.connectSocket(hrAutoAdjuster);
+    fiO2.setWritable();
 });
 socket.on('disconnect', function(data) {
     console.log('Sockets: Disconnected from server.');
     updateStatusDisconnected();
     SimulationBehavior.disconnectSocket(simulation);
     SensorConnectionBehavior.disconnectSocket(sensorConnection);
+    spO2.setReadOnly();
+    AutoAdjusterBehavior.disconnectSocket(spO2AutoAdjuster);
+    spO2Noise.setReadOnly();
+    hr.setReadOnly();
+    AutoAdjusterBehavior.disconnectSocket(hrAutoAdjuster);
+    fiO2.setReadOnly();
 });
 socket.on('control-connection-info', function(data) {
     if (data > 1) {

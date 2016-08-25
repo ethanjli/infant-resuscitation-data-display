@@ -75,7 +75,8 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             },
             atMin: 'min',
             neitherMaxNorMin: 'stopped',
-            clickDecreasing: 'decreasing'
+            clickDecreasing: 'decreasing',
+            disconnectSocket: 'disconnectedSocket'
         },
         min: {
             _onEnter: function(client) {
@@ -90,7 +91,8 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             },
             atMax: 'max',
             neitherMaxNorMin: 'stopped',
-            clickIncreasing: 'increasing'
+            clickIncreasing: 'increasing',
+            disconnectSocket: 'disconnectedSocket'
         },
         stopped: {
             _onEnter: function(client) {
@@ -100,7 +102,8 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             atMax: 'max',
             atMin: 'min',
             clickIncreasing: 'increasing',
-            clickDecreasing: 'decreasing'
+            clickDecreasing: 'decreasing',
+            disconnectSocket: 'disconnectedSocket'
         },
         increasing: {
             _onEnter: function(client) {
@@ -114,7 +117,8 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             },
             atMax: 'max',
             clickIncreasing: 'stopped',
-            clickDecreasing: 'decreasing'
+            clickDecreasing: 'decreasing',
+            disconnectSocket: 'disconnectedSocket'
         },
         decreasing: {
             _onEnter: function(client) {
@@ -128,7 +132,19 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             },
             atMin: 'min',
             clickIncreasing: 'increasing',
-            clickDecreasing: 'stopped'
+            clickDecreasing: 'stopped',
+            disconnectSocket: 'disconnectedSocket'
+        },
+        disconnectedSocket: {
+            _onEnter: function(client) {
+                client.autoIncreaseBtn.disabled = 'disabled';
+                client.autoDecreaseBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+                client.autoIncreaseBtn.disabled = '';
+                client.autoDecreaseBtn.disabled = '';
+            },
+            connectSocket: 'uninitialized'
         }
     },
     updateValue: function(client) {
@@ -141,6 +157,12 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
     },
     clickDecreasing: function(client) {
         this.handle(client, 'clickDecreasing');
+    },
+    connectSocket: function(client) {
+        this.handle(client, 'connectSocket');
+    },
+    disconnectSocket: function(client) {
+        this.handle(client, 'disconnectSocket');
     }
 });
 
