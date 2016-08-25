@@ -180,10 +180,9 @@ var spO2 = new AdjustableValue({
     step: 1,
     placeholder: 0,
     socket: socket,
-    messageName: 'spO2'
+    messageName: 'spO2',
+    updateMessage: 'Updating SpO2 level to '
 });
-spO2.listen('Updating SpO2 level to ');
-spO2.monitor();
 var spO2AutoAdjuster = new AutoAdjuster({
     adjustableValue: spO2,
     autoIncreaseBtn: 'btn-spo2-autoincrease',
@@ -201,10 +200,9 @@ var spO2Noise = new AdjustableValue({
     step: 1,
     placeholder: 0,
     socket: socket,
-    messageName: 'spO2-noise'
+    messageName: 'spO2-noise',
+    updateMessage: 'Updating SpO2 noise range to +/-'
 });
-spO2Noise.listen('Updating SpO2 noise range to +/-');
-spO2Noise.monitor();
 
 var hr = new AdjustableValue({
     inputElem: 'input-hr',
@@ -215,10 +213,9 @@ var hr = new AdjustableValue({
     step: 1,
     placeholder: 0,
     socket: socket,
-    messageName: 'hr'
+    messageName: 'hr',
+    updateMessage: 'Updating HR to '
 });
-hr.listen('Updating HR to ');
-hr.monitor();
 var hrAutoAdjuster = new AutoAdjuster({
     adjustableValue: hr,
     autoIncreaseBtn: 'btn-hr-autoincrease',
@@ -236,10 +233,9 @@ var fiO2 = new AdjustableValue({
     step: 1,
     placeholder: 21,
     socket: socket,
-    messageName: 'fiO2'
+    messageName: 'fiO2',
+    updateMessage: 'Updating FiO2 level to '
 });
-fiO2.listen('Updating FiO2 level to ');
-fiO2.monitor();
 
 function updateStatusConnected() {
     var statusElem = document.getElementById('status-connection');
@@ -291,18 +287,10 @@ socket.on('connect', function(data) {
     socket.emit('connected', {client: 'control-panel'});
     console.log('Sockets: Connected to server.');
     updateStatusConnected();
-    spO2.setWritable();
-    spO2Noise.setWritable();
-    hr.setWritable();
-    fiO2.setWritable();
 });
 socket.on('disconnect', function(data) {
     console.log('Sockets: Disconnected from server.');
     updateStatusDisconnected();
-    spO2.setReadOnly();
-    spO2Noise.setReadOnly();
-    hr.setReadOnly();
-    fiO2.setReadOnly();
 });
 socket.on('control-connection-info', function(data) {
     if (data > 1) {

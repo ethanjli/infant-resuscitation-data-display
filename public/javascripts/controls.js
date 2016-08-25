@@ -13,6 +13,9 @@ function AdjustableValue(options) {
     this.unitsElem.innerHTML = this.units.trim();
     this.socket = options.socket;
     this.messageName = options.messageName;
+    this.updateMessage = options.updateMessage;
+    this.listen();
+    this.monitor();
 }
 AdjustableValue.prototype.update = function(newValue, emit) {
     value = clamp(newValue, this.min, this.max);
@@ -23,12 +26,14 @@ AdjustableValue.prototype.update = function(newValue, emit) {
     }
 }
 AdjustableValue.prototype.afterUpdate = function() {}
-AdjustableValue.prototype.listen = function(updateMessage) {
+AdjustableValue.prototype.listen = function() {
     this.socket.on(this.messageName, (function(newValue) {
-        console.log('Sockets: ' + updateMessage + newValue + '.');
+        console.log('Sockets: ' + this.updateMessage + newValue + '.');
         if (this.units === '%') newValue = Math.round(newValue * 100);
         this.update(newValue);
     }).bind(this));
+    this.socket.on('connect', this.setWritable.bind(this));
+    this.socket.on('disconnect', this.setReadOnly.bind(this));
 }
 AdjustableValue.prototype.monitor = function() {
     this.inputElem.onchange = (function() {
@@ -165,7 +170,9 @@ function AutoAdjuster(options) {
     this.stopIncreaseString = 'Stop Auto-Increasing';
     this.stopDecreaseString = 'Stop Auto-Decreasing';
     this.autoAdjustTimer = null;
-
+    this.monitor();
+}
+AutoAdjuster.prototype.monitor = function() {
     this.adjustableValue.afterUpdate = AutoAdjusterBehavior.updateValue.bind(AutoAdjusterBehavior, this);
     this.autoIncreaseBtn.onclick = AutoAdjusterBehavior.clickIncreasing.bind(AutoAdjusterBehavior, this);
     this.autoDecreaseBtn.onclick = AutoAdjusterBehavior.clickDecreasing.bind(AutoAdjusterBehavior, this);
@@ -294,6 +301,10 @@ function Simulation(options) {
     this.pauseResumeBtn = document.getElementById(options.pauseResumeBtn);
     this.downloadBtn = document.getElementById(options.downloadBtn);
 
+    this.listen();
+    this.monitor();
+}
+Simulation.prototype.listen = function() {
     this.socket.on('start', (function() {
         console.log('Sockets: Starting simulation.');
         SimulationBehavior.start(this);
@@ -317,6 +328,8 @@ function Simulation(options) {
         }
     }).bind(this));
     this.socket.on('disconnect', SimulationBehavior.disconnectSocket.bind(SimulationBehavior, this));
+}
+Simulation.prototype.monitor = function() {
     this.startResetBtn.onclick = SimulationBehavior.clickStartReset.bind(SimulationBehavior, this);
     this.pauseResumeBtn.onclick = SimulationBehavior.clickPauseResume.bind(SimulationBehavior, this);
 }
@@ -423,8 +436,10 @@ function SensorConnection(options) {
     this.delay = options.delay;
     this.delayedConnectionTimer = null;
     this.timeUntilDelayedConnection = 0;
-    this.sensorConnectionBtn.onclick = SensorConnectionBehavior.clickConnectDisconnect.bind(SensorConnectionBehavior, this);
-    this.delayedSensorConnectionBtn.onclick = SensorConnectionBehavior.clickDelayedConnect.bind(SensorConnectionBehavior, this);
+    this.listen();
+    this.monitor();
+}
+SensorConnection.prototype.listen = function() {
     this.socket.on('sensor-connection', (function(data) {
         if (data) {
             console.log('Sockets: Connecting sensors.');
@@ -435,6 +450,10 @@ function SensorConnection(options) {
         }
     }).bind(this));
     this.socket.on('disconnect', SensorConnectionBehavior.disconnectSocket.bind(SensorConnectionBehavior, this));
+}
+SensorConnection.prototype.monitor = function() {
+    this.sensorConnectionBtn.onclick = SensorConnectionBehavior.clickConnectDisconnect.bind(SensorConnectionBehavior, this);
+    this.delayedSensorConnectionBtn.onclick = SensorConnectionBehavior.clickDelayedConnect.bind(SensorConnectionBehavior, this);
 }
 SensorConnection.prototype.countDownDelayedConnection = function() {
     if (this.timeUntilDelayedConnection > 0) {
