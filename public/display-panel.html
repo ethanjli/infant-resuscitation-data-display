@@ -331,6 +331,10 @@ socket.on('fiO2', function(data) {
     console.log('Sockets: Updating FiO2 level to ' + data + '.');
     updateFiO2(data);
 })
+socket.on('redirect', function(data) {
+    console.log('Sockets: Redirecting to ' + data);
+    window.location = data;
+})
 </script>
 
 </body>

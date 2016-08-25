@@ -51,7 +51,7 @@
                                 <hr>
                                 <div class="form-group">
                                     <div class="row">
-                                        <label>Simulation state</label>
+                                        <label>Simulation State</label>
                                     </div>
                                     <div class="btn-group" role="group">
                                         <button type="button" id="btn-startreset-simulation" class="btn btn-default"></button>
@@ -65,6 +65,18 @@
                                     <div class="btn-group-vertical" role="group">
                                         <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default"></button>
                                         <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default"></button>
+                                    </div>
+                                </div>
+                            </form>
+                            <hr>
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Display</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-minimal-display" class="btn btn-default">Use Minimal Display</button>
+                                        <button type="button" id="btn-full-display" class="btn btn-default">Use Full Display</button>
                                     </div>
                                 </div>
                             </form>
@@ -313,6 +325,15 @@ socket.on('hardware-connection-info', function(data) {
         updateStatusHardwareDisconnected();
     }
 });
+
+document.getElementById('btn-minimal-display').onclick = function() {
+    console.log('Socket: Redirecting clients to the minimal display.');
+    socket.emit('redirect', '/minimal-display');
+}
+document.getElementById('btn-full-display').onclick = function() {
+    console.log('Socket: Redirecting clients to the full display.');
+    socket.emit('redirect', '/display');
+}
 
 $(function() {
     $(':input[type="number"]').on('mousewheel', function(event) {

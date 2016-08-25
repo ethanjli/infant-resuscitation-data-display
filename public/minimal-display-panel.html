@@ -131,6 +131,10 @@ socket.on('reset', function(data) {
     setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
     console.log('Sockets: Resetting data.');
 });
+socket.on('redirect', function(data) {
+    console.log('Sockets: Redirecting to ' + data);
+    window.location = data;
+})
 </script>
 
 </body>
