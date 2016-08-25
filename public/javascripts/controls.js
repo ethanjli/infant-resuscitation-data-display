@@ -1,10 +1,18 @@
-function AdjustableValue(inputElemId, units, socket, messageName) {
-    this.inputElem = document.getElementById(inputElemId);
-    this.units = units;
-    this.min = parseInt(this.inputElem.min);
-    this.max = parseInt(this.inputElem.max);
-    this.socket = socket;
-    this.messageName = messageName;
+function AdjustableValue(options) {
+    this.inputElem = document.getElementById(options.inputElem);
+    this.unitsElem = document.getElementById(options.unitsElem);
+    this.units = options.units;
+    this.min = options.min;
+    this.max = options.max;
+    this.step = options.step;
+    this.placeholder = options.placeholder;
+    this.inputElem.min = options.min;
+    this.inputElem.max = options.max;
+    this.inputElem.step = options.step;
+    this.inputElem.placeholder = options.placeholder;
+    this.unitsElem.innerHTML = this.units.trim();
+    this.socket = options.socket;
+    this.messageName = options.messageName;
 }
 AdjustableValue.prototype.update = function(newValue, emit) {
     value = clamp(newValue, this.min, this.max);
@@ -76,7 +84,6 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             atMin: 'min',
             neitherMaxNorMin: 'stopped',
             clickDecreasing: 'decreasing',
-            disconnectSocket: 'disconnectedSocket'
         },
         min: {
             _onEnter: function(client) {
@@ -92,7 +99,6 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             atMax: 'max',
             neitherMaxNorMin: 'stopped',
             clickIncreasing: 'increasing',
-            disconnectSocket: 'disconnectedSocket'
         },
         stopped: {
             _onEnter: function(client) {
@@ -103,7 +109,6 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             atMin: 'min',
             clickIncreasing: 'increasing',
             clickDecreasing: 'decreasing',
-            disconnectSocket: 'disconnectedSocket'
         },
         increasing: {
             _onEnter: function(client) {
@@ -118,7 +123,6 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             atMax: 'max',
             clickIncreasing: 'stopped',
             clickDecreasing: 'decreasing',
-            disconnectSocket: 'disconnectedSocket'
         },
         decreasing: {
             _onEnter: function(client) {
@@ -133,19 +137,7 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
             atMin: 'min',
             clickIncreasing: 'increasing',
             clickDecreasing: 'stopped',
-            disconnectSocket: 'disconnectedSocket'
         },
-        disconnectedSocket: {
-            _onEnter: function(client) {
-                client.autoIncreaseBtn.disabled = 'disabled';
-                client.autoDecreaseBtn.disabled = 'disabled';
-            },
-            _onExit: function(client) {
-                client.autoIncreaseBtn.disabled = '';
-                client.autoDecreaseBtn.disabled = '';
-            },
-            connectSocket: 'uninitialized'
-        }
     },
     updateValue: function(client) {
         if (client.adjustableValue.atMax()) this.handle(client, 'atMax');
@@ -161,9 +153,6 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
     connectSocket: function(client) {
         this.handle(client, 'connectSocket');
     },
-    disconnectSocket: function(client) {
-        this.handle(client, 'disconnectSocket');
-    }
 });
 
 
@@ -215,6 +204,7 @@ var SimulationBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.startResetBtn.innerHTML = 'Start';
                 client.startResetBtn.disabled = '';
+                client.pauseResumeBtn.innerHTML = 'Pause';
                 client.pauseResumeBtn.disabled = 'disabled';
                 client.downloadBtn.disabled = 'disabled';
             },
@@ -326,6 +316,7 @@ function Simulation(options) {
             SimulationBehavior.pause(this);
         }
     }).bind(this));
+    this.socket.on('disconnect', SimulationBehavior.disconnectSocket.bind(SimulationBehavior, this));
     this.startResetBtn.onclick = SimulationBehavior.clickStartReset.bind(SimulationBehavior, this);
     this.pauseResumeBtn.onclick = SimulationBehavior.clickPauseResume.bind(SimulationBehavior, this);
 }
@@ -338,7 +329,7 @@ var SensorConnectionBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.sensorConnectionBtn.innerHTML = 'Connect Sensors';
                 client.sensorConnectionBtn.disabled = '';
-                client.delayedSensorConnectionBtn.innerHTML = 'Schedule Connection to Sensors in ' + client.delay + ' sec';
+                client.delayedSensorConnectionBtn.innerHTML = 'Schedule Connection in ' + client.delay + ' sec';
                 client.delayedSensorConnectionBtn.disabled = '';
             },
             _onExit: function(client) {
@@ -354,7 +345,7 @@ var SensorConnectionBehavior = new machina.BehavioralFsm({
         },
         waitingToConnect: {
             _onEnter: function(client) {
-                client.sensorConnectionBtn.innerHTML = 'Connect to Sensors Immediately';
+                client.sensorConnectionBtn.innerHTML = 'Connect Immediately';
                 client.sensorConnectionBtn.disabled = '';
                 client.delayedSensorConnectionBtn.disabled = '';
                 client.timeUntilDelayedConnection = client.delay;
@@ -443,6 +434,7 @@ function SensorConnection(options) {
             SensorConnectionBehavior.disconnect(this);
         }
     }).bind(this));
+    this.socket.on('disconnect', SensorConnectionBehavior.disconnectSocket.bind(SensorConnectionBehavior, this));
 }
 SensorConnection.prototype.countDownDelayedConnection = function() {
     if (this.timeUntilDelayedConnection > 0) {

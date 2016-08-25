@@ -54,8 +54,8 @@
                                         <label>Simulation state</label>
                                     </div>
                                     <div class="btn-group" role="group">
-                                        <button type="button" id="btn-startreset-simulation" class="btn btn-default">Start</button>
-                                        <button type="button" id="btn-pauseresume-simulation" class="btn btn-default">Pause</button>
+                                        <button type="button" id="btn-startreset-simulation" class="btn btn-default"></button>
+                                        <button type="button" id="btn-pauseresume-simulation" class="btn btn-default"></button>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -63,8 +63,8 @@
                                         <label>Sensor Connection</label>
                                     </div>
                                     <div class="btn-group-vertical" role="group">
-                                        <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default">Connect Sensors</button>
-                                        <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default">Connect to Sensors in 15 Seconds</button>
+                                        <button type="button" id="btn-connectdisconnect-sensors" class="btn btn-default"></button>
+                                        <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default"></button>
                                     </div>
                                 </div>
                             </form>
@@ -89,15 +89,15 @@
                                     </div>
                                     <label for="input-spo2" class="col-sm-5 control-label">Signal Mean</label>
                                     <div class="input-group col-sm-5">
-                                        <input type="number" id="input-spo2" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                        <div class="input-group-addon">%</div>
+                                        <input type="number" id="input-spo2" class="form-control">
+                                        <div id="input-spo2-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="input-spo2-noise" class="col-sm-5 control-label">Signal Standard Deviation</label>
                                     <div class="input-group col-sm-5">
-                                        <input type="number" id="input-spo2-noise" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                        <div class="input-group-addon">%</div>
+                                        <input type="number" id="input-spo2-noise" class="form-control">
+                                        <div id="input-spo2-noise-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -113,8 +113,8 @@
                                 <div class="form-group">
                                     <label for="input-hr" class="col-sm-5 control-label">Heart Rate</label>
                                     <div class="input-group col-sm-5">
-                                        <input type="number" id="input-hr" class="form-control" placeholder="0" min="0" max="140" step="1">
-                                        <div class="input-group-addon">bpm</div>
+                                        <input type="number" id="input-hr" class="form-control">
+                                        <div id="input-hr-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -138,8 +138,8 @@
                                 <div class="form-group">
                                     <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
                                     <div class="input-group col-sm-5">
-                                        <input type="number" id="input-fio2" class="form-control" placeholder="0" min="0" max="100" step="1">
-                                        <div class="input-group-addon">%</div>
+                                        <input type="number" id="input-fio2" class="form-control">
+                                        <div id="input-fio2-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                             </form>
@@ -171,7 +171,17 @@ var sensorConnection = new SensorConnection({
 var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
 apgarTime.listen();
 
-var spO2 = new AdjustableValue('input-spo2', '%', socket, 'spO2');
+var spO2 = new AdjustableValue({
+    inputElem: 'input-spo2',
+    unitsElem: 'input-spo2-units',
+    units: '%',
+    min: 0,
+    max: 100,
+    step: 1,
+    placeholder: 0,
+    socket: socket,
+    messageName: 'spO2'
+});
 spO2.listen('Updating SpO2 level to ');
 spO2.monitor();
 var spO2AutoAdjuster = new AutoAdjuster({
@@ -182,11 +192,31 @@ var spO2AutoAdjuster = new AutoAdjuster({
     timeStep: 2
 });
 
-var spO2Noise = new AdjustableValue('input-spo2-noise', '%', socket, 'spO2-noise');
+var spO2Noise = new AdjustableValue({
+    inputElem: 'input-spo2-noise',
+    unitsElem: 'input-spo2-noise-units',
+    units: '%',
+    min: 0,
+    max: 100,
+    step: 1,
+    placeholder: 0,
+    socket: socket,
+    messageName: 'spO2-noise'
+});
 spO2Noise.listen('Updating SpO2 noise range to +/-');
 spO2Noise.monitor();
 
-var hr = new AdjustableValue('input-hr', ' bpm', socket, 'hr');
+var hr = new AdjustableValue({
+    inputElem: 'input-hr',
+    unitsElem: 'input-hr-units',
+    units: ' bpm',
+    min: 0,
+    max: 140,
+    step: 1,
+    placeholder: 0,
+    socket: socket,
+    messageName: 'hr'
+});
 hr.listen('Updating HR to ');
 hr.monitor();
 var hrAutoAdjuster = new AutoAdjuster({
@@ -197,7 +227,17 @@ var hrAutoAdjuster = new AutoAdjuster({
     timeStep: 2
 });
 
-var fiO2 = new AdjustableValue('input-fio2', '%', socket, 'fiO2');
+var fiO2 = new AdjustableValue({
+    inputElem: 'input-fio2',
+    unitsElem: 'input-fio2-units',
+    units: '%',
+    min: 21,
+    max: 100,
+    step: 1,
+    placeholder: 21,
+    socket: socket,
+    messageName: 'fiO2'
+});
 fiO2.listen('Updating FiO2 level to ');
 fiO2.monitor();
 
@@ -252,22 +292,16 @@ socket.on('connect', function(data) {
     console.log('Sockets: Connected to server.');
     updateStatusConnected();
     spO2.setWritable();
-    AutoAdjusterBehavior.connectSocket(spO2AutoAdjuster);
     spO2Noise.setWritable();
     hr.setWritable();
-    AutoAdjusterBehavior.connectSocket(hrAutoAdjuster);
     fiO2.setWritable();
 });
 socket.on('disconnect', function(data) {
     console.log('Sockets: Disconnected from server.');
     updateStatusDisconnected();
-    SimulationBehavior.disconnectSocket(simulation);
-    SensorConnectionBehavior.disconnectSocket(sensorConnection);
     spO2.setReadOnly();
-    AutoAdjusterBehavior.disconnectSocket(spO2AutoAdjuster);
     spO2Noise.setReadOnly();
     hr.setReadOnly();
-    AutoAdjusterBehavior.disconnectSocket(hrAutoAdjuster);
     fiO2.setReadOnly();
 });
 socket.on('control-connection-info', function(data) {
