@@ -207,7 +207,7 @@ var SimulationBehavior = new machina.BehavioralFsm({
                 this.transition(client, 'waitingForResponse');
                 client.socket.emit('start');
             },
-            disconnect: 'waitingForResponse'
+            disconnectSocket: 'waitingForResponse'
         },
         running: {
             reset: 'ready',
@@ -220,7 +220,7 @@ var SimulationBehavior = new machina.BehavioralFsm({
                 this.transition(client, 'waitingForResponse');
                 client.socket.emit('stop');
             },
-            disconnect: 'waitingForResponse'
+            disconnectSocket: 'waitingForResponse'
         },
         paused: {
             _onEnter: function(client) {
@@ -239,7 +239,7 @@ var SimulationBehavior = new machina.BehavioralFsm({
                 this.transition(client, 'waitingForResponse');
                 client.socket.emit('start');
             },
-            disconnect: 'waitingForResponse'
+            disconnectSocket: 'waitingForResponse'
         },
         waitingForResponse: {
             _onEnter: function(client) {
@@ -272,8 +272,8 @@ var SimulationBehavior = new machina.BehavioralFsm({
     clickPauseResume: function(client) {
         this.handle(client, 'clickPauseResume');
     },
-    disconnect: function(client) {
-        this.handle(client, 'disconnect');
+    disconnectSocket: function(client) {
+        this.handle(client, 'disconnectSocket');
     }
 });
 function Simulation(options) {
@@ -294,16 +294,140 @@ function Simulation(options) {
         console.log('Sockets: Stopping simuluation.');
         SimulationBehavior.pause(this);
     }).bind(this));
-    this.socket.on('simulation-state-info', function(data) {
+    this.socket.on('simulation-state-info', (function(data) {
         console.log('Sockets: Simulation state is: ' + data);
         if (data === 'ready') {
-            SimulationBehavior.reset(simulation);
+            SimulationBehavior.reset(this);
         } else if (data === 'running') {
-            SimulationBehavior.start(simulation);
+            SimulationBehavior.start(this);
         } else if (data === 'stopped') {
-            SimulationBehavior.pause(simulation);
+            SimulationBehavior.pause(this);
         }
-    })
+    }).bind(this));
     this.startResetBtn.onclick = SimulationBehavior.clickStartReset.bind(SimulationBehavior, this);
     this.pauseResumeBtn.onclick = SimulationBehavior.clickPauseResume.bind(SimulationBehavior, this);
+}
+
+var SensorConnectionBehavior = new machina.BehavioralFsm({
+    namespace: 'SensorConnection',
+    initialState: 'disconnected',
+    states: {
+        disconnected: {
+            _onEnter: function(client) {
+                client.sensorConnectionBtn.innerHTML = 'Connect Sensors';
+                client.sensorConnectionBtn.disabled = '';
+                client.delayedSensorConnectionBtn.innerHTML = 'Schedule Connection to Sensors in ' + client.delay + ' sec';
+                client.delayedSensorConnectionBtn.disabled = '';
+            },
+            _onExit: function(client) {
+                client.delayedSensorConnectionBtn.disabled = 'disabled'
+            },
+            connect: 'connected',
+            clickDelayedConnect: 'waitingToConnect',
+            clickConnectDisconnect: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('sensor-connection', true);
+            },
+            disconnectSocket: 'waitingForResponse'
+        },
+        waitingToConnect: {
+            _onEnter: function(client) {
+                client.sensorConnectionBtn.innerHTML = 'Connect to Sensors Immediately';
+                client.sensorConnectionBtn.disabled = '';
+                client.delayedSensorConnectionBtn.disabled = '';
+                client.timeUntilDelayedConnection = client.delay;
+                client.delayedConnectionTimer = setInterval(client.countDownDelayedConnection.bind(client), 1000);
+            },
+            _onExit: function(client) {
+                if (client.delayedConnectionTimer) clearInterval(client.delayedConnectionTimer);
+            },
+            connect: 'connected',
+            disconnect: 'disconnected',
+            clickConnectDisconnect: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('sensor-connection', true);
+            },
+            clickDelayedConnect: 'disconnected',
+            delayedConnectionTimeout: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('sensor-connection', true);
+            },
+            disconnectSocket: 'waitingForResponse'
+        },
+        connected: {
+            _onEnter: function(client) {
+                client.sensorConnectionBtn.innerHTML = 'Disconnect Sensors';
+                client.sensorConnectionBtn.disabled = '';
+                client.delayedSensorConnectionBtn.innerHTML = 'Connected to Sensors';
+                client.delayedSensorConnectionBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+            },
+            disconnect: 'disconnected',
+            clickConnectDisconnect: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('sensor-connection', false);
+            },
+            disconnectSocket: 'waitingForResponse'
+
+        },
+        waitingForResponse: {
+            _onEnter: function(client) {
+                client.sensorConnectionBtn.disabled = 'disabled';
+                client.delayedSensorConnectionBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+                client.sensorConnectionBtn.disabled = '';
+                client.delayedSensorConnectionBtn.disabled = '';
+            },
+            connect: 'connected',
+            disconnect: 'disconnected'
+        }
+    },
+    connect: function(client) {
+        this.handle(client, 'connect');
+    },
+    disconnect: function(client) {
+        this.handle(client, 'disconnect');
+    },
+    clickConnectDisconnect: function(client) {
+        this.handle(client, 'clickConnectDisconnect');
+    },
+    clickDelayedConnect: function(client) {
+        this.handle(client, 'clickDelayedConnect');
+    },
+    disconnectSocket: function(client) {
+        this.handle(client, 'disconnectSocket');
+    },
+    delayedConnectionTimeout: function(client) {
+        this.handle(client, 'delayedConnectionTimeout');
+    }
+});
+function SensorConnection(options) {
+    this.socket = options.socket;
+    this.sensorConnectionBtn = document.getElementById(options.sensorConnectionBtn);
+    this.delayedSensorConnectionBtn = document.getElementById(options.delayedSensorConnectionBtn);
+    this.delay = options.delay;
+    this.delayedConnectionTimer = null;
+    this.timeUntilDelayedConnection = 0;
+    this.sensorConnectionBtn.onclick = SensorConnectionBehavior.clickConnectDisconnect.bind(SensorConnectionBehavior, this);
+    this.delayedSensorConnectionBtn.onclick = SensorConnectionBehavior.clickDelayedConnect.bind(SensorConnectionBehavior, this);
+    this.socket.on('sensor-connection', (function(data) {
+        if (data) {
+            console.log('Sockets: Connecting sensors.');
+            SensorConnectionBehavior.connect(this);
+        } else {
+            console.log('Sockets: Disconnecting sensors.');
+            SensorConnectionBehavior.disconnect(this);
+        }
+    }).bind(this));
+}
+SensorConnection.prototype.countDownDelayedConnection = function() {
+    if (this.timeUntilDelayedConnection > 0) {
+        this.delayedSensorConnectionBtn.innerHTML = 'Cancel Scheduled Connection (' + this.timeUntilDelayedConnection + ' sec left)';
+        this.timeUntilDelayedConnection--;
+        return;
+    }
+    SensorConnectionBehavior.delayedConnectionTimeout(this);
+    this.delayedSensorConnectionBtn.innerHTML = 'Connecting now...';
 }

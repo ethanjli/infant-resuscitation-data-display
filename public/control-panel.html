@@ -161,6 +161,13 @@ var simulation = new Simulation({
     downloadBtn: 'btn-download-csv'
 });
 
+var sensorConnection = new SensorConnection({
+    socket: socket,
+    sensorConnectionBtn: 'btn-connectdisconnect-sensors',
+    delayedSensorConnectionBtn: 'btn-delayedconnect-sensors',
+    delay: 15
+});
+
 var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
 apgarTime.listen();
 
@@ -239,20 +246,6 @@ function updateStatusHardwareDisconnected() {
     statusElem.className = 'label label-warning';
     fiO2.setWritable();
 }
-function updateSensorConnection(sensorConnection) {
-    var sensorConnectionBtn = document.getElementById('btn-connectdisconnect-sensors');
-    var delayedSensorConnectionBtn = document.getElementById('btn-delayedconnect-sensors');
-    if (sensorConnection) {
-        sensorConnectionBtn.innerHTML = 'Disconnect Sensors';
-        delayedSensorConnectionBtn.innerHTML = 'Connected to Sensors';
-        delayedSensorConnectionBtn.disabled = 'disabled';
-    } else {
-        sensorConnectionBtn.innerHTML = 'Connect Sensors';
-        delayedSensorConnectionBtn.innerHTML = 'Connect to Sensors in 15 Seconds';
-        delayedSensorConnectionBtn.disabled = '';
-    }
-    sensorConnectionBtn.disabled = '';
-}
 
 socket.on('connect', function(data) {
     socket.emit('connected', {client: 'control-panel'});
@@ -262,7 +255,8 @@ socket.on('connect', function(data) {
 socket.on('disconnect', function(data) {
     console.log('Sockets: Disconnected from server.');
     updateStatusDisconnected();
-    SimulationBehavior.disconnect(simulation);
+    SimulationBehavior.disconnectSocket(simulation);
+    SensorConnectionBehavior.disconnectSocket(sensorConnection);
 });
 socket.on('control-connection-info', function(data) {
     if (data > 1) {
@@ -285,45 +279,6 @@ socket.on('hardware-connection-info', function(data) {
         updateStatusHardwareDisconnected();
     }
 });
-socket.on('sensor-connection', function(data) {
-    if (data) {
-        console.log('Sockets: Connecting sensors');
-    } else {
-        console.log('Sockets: Disconnecting sensors');
-    }
-    updateSensorConnection(data);
-});
-
-document.getElementById('btn-connectdisconnect-sensors').onclick = function() {
-    var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
-    var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');
-    if (sensorsBtn.innerHTML === 'Connect Sensors') {
-        socket.emit('sensor-connection', true);
-        delayedSensorBtn.innerHTML = 'Connected to Sensors';
-        delayedSensorBtn.disabled = 'disabled';
-    } else if (sensorsBtn.innerHTML === 'Disconnect Sensors') {
-        delayedSensorBtn.innerHTML = 'Connect Sensors in 15 Seconds';
-        socket.emit('sensor-connection', false);
-    }
-    sensorsBtn.disabled = 'disabled';
-};
-document.getElementById('btn-delayedconnect-sensors').onclick = function() {
-    var sensorsBtn = document.getElementById('btn-connectdisconnect-sensors');
-    var delayedSensorBtn = document.getElementById('btn-delayedconnect-sensors');
-    var delay = 15;
-    for (i = 1; i < delay; i++) {
-        setTimeout((function(countdown) {
-            console.log('Connecting in ' + (15 - countdown) + 's...');
-            delayedSensorBtn.innerHTML = 'Connecting in ' + (15 - countdown) + 's...';
-        }).bind(this, i), i * 1000);
-    }
-    setTimeout(function() {
-        socket.emit('sensor-connection', true);
-        delayedSensorBtn.innerHTML = 'Connected to Sensors';
-    }, delay * 1000);
-    delayedSensorBtn.disabled = 'disabled';
-    sensorsBtn.disabled = 'disabled';
-};
 
 $(function() {
     $(':input[type="number"]').on('mousewheel', function(event) {
