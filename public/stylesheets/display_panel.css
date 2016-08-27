@@ -1,5 +1,6 @@
 body {
   background-color: #000;
+  font-family: 'texgyreheros', sans-serif;
 }
 h1, h2, h3 {
   color: white;
@@ -30,15 +31,21 @@ h1, h2, h3 {
     color: white;
 }
 #chart .c3-axis-x-label {
-    font: bold 24px sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
     fill: white;
 }
 #chart .c3-axis-y-label {
-    font: bold 24px sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
     fill: white;
 }
 #chart .tick {
-    font: 24px sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
     fill: white;
 }
 #chart .c3-area {
@@ -52,13 +59,19 @@ h1, h2, h3 {
     stroke-width: 5px;
 }
 #chart .spO2-target-label {
-    font: bold 24px sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
 }
 #chart .spO2-label {
-    font: bold 24px sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
 }
 #chart .fiO2-label {
-    font: bold 24px sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
 }
 #chart .c3-grid text {
     fill: white;
@@ -69,8 +82,9 @@ h1, h2, h3 {
     margin-left: 100px;
 }
 .current-display {
-    font: 72px sans-serif;
+    font-size: 72px;
     font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
     line-height: 0.5;
 }
 .spo2-color {
