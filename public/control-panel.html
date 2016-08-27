@@ -180,8 +180,13 @@ var sensorConnection = new SensorConnection({
     delay: 15
 });
 
-var apgarTime = new ReadableValue('apgar-time', 'time', socket, 'tick');
-apgarTime.listen();
+var apgarTime = new ReadableValue({
+    elem: 'apgar-time',
+    units: 'time',
+    min: 0,
+    socket: socket,
+    messageName: 'tick'
+});
 
 var spO2 = new AdjustableValue({
     inputElem: 'input-spo2',

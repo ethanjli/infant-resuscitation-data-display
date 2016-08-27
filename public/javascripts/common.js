@@ -9,13 +9,17 @@ function toDateString(totalSeconds) {
     return (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
 }
 
-function ReadableValue(elemId, units, socket, messageName) {
-    this.elem = document.getElementById(elemId);
-    this.units = units;
-    this.socket = socket;
-    this.messageName = messageName;
+function ReadableValue(options) {
+    this.elem = document.getElementById(options.elem);
+    this.units = options.units;
+    this.min = options.min;
+    this.max = options.max;
+    this.socket = options.socket;
+    this.messageName = options.messageName;
+    this.listen();
 }
 ReadableValue.prototype.update = function(newValue) {
+    newValue = clamp(newValue, this.min, this.max);
     if (this.units === 'time') {
         newValue = toDateString(newValue);
     }

@@ -57,8 +57,13 @@
 
 <script>
 var socket = io.connect(window.location.host);
-var apgarTime = new ReadableValue('current-time-display', 'time', socket, 'tick');
-apgarTime.listen();
+var apgarTime = new ReadableValue({
+    elem: 'current-time-display',
+    units: 'time',
+    min: 0,
+    socket: socket,
+    messageName: 'tick'
+});
 var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, 0.5, ecgData);
 ecg.draw();
 var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 2, 24, 48, 0.5, ppgData);
