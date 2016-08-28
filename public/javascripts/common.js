@@ -14,18 +14,28 @@ function ReadableValue(options) {
     this.units = options.units;
     this.min = options.min;
     this.max = options.max;
+    this.missingString = options.missingString;
     this.socket = options.socket;
     this.messageName = options.messageName;
-    this.listen();
+    if (this.socket) this.listen();
 }
 ReadableValue.prototype.update = function(newValue) {
+    console.log(this.units, newValue);
+    if (newValue === undefined || newValue === null || isNaN(newValue)) {
+        this.elem.innerHTML = this.missingString;
+        return;
+    }
     newValue = clamp(newValue, this.min, this.max);
     if (this.units === 'time') {
         newValue = toDateString(newValue);
+    } else if (this.units === 'bpm') {
+        newValue = Math.round(newValue);
+    } else if (this.units === '%') {
+        newValue = Math.round(newValue * 100) + '%';
     }
     this.elem.innerHTML = newValue;
 }
 ReadableValue.prototype.listen = function() {
-    this.socket.on(this.messageName, this.update.bind(this))
+    this.socket.on(this.messageName, this.update.bind(this));
 }
 

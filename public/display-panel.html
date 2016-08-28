@@ -64,10 +64,33 @@ var apgarTime = new ReadableValue({
     socket: socket,
     messageName: 'tick'
 });
+var hr = new ReadableValue({
+    elem: 'current-hr-display',
+    units: 'bpm',
+    min: 0,
+    max: 200,
+    missingString: '???'
+});
 var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, 0.5, ecgData);
 ecg.draw();
+var spO2 = new ReadableValue({
+    elem: 'current-spo2-display',
+    units: '%',
+    min: 0,
+    max: 1,
+    missingString: '???'
+});
 var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 2, 24, 48, 0.5, ppgData);
 ppg.draw();
+var fiO2 = new ReadableValue({
+    elem: 'current-fio2-display',
+    units: '%',
+    min: 0.21,
+    max: 1,
+    missingString: '???',
+    socket: socket,
+    messageName: 'fiO2'
+});
 
 function updateStatusConnected() {
     var statusElem = document.getElementById('status-connection');
@@ -80,14 +103,6 @@ function updateStatusDisconnected() {
     statusElem.innerHTML = 'Not connected to sensors!';
     statusElem.className = 'label label-danger';
     statusElem.style.visibility = 'visible';
-}
-function updateFiO2(fiO2) {
-    if (fiO2 === null || isNaN(fiO2)) {
-        fiO2 = '0%';
-    } else {
-        fiO2 = Math.round(fiO2 * 100) + '%'
-    }
-    document.getElementById('current-fio2-display').innerHTML = fiO2;
 }
 
 var chart = c3.generate({
@@ -184,50 +199,38 @@ var chart = c3.generate({
     }
 });
 
-function setCurrentDisplay(time, spO2, fiO2, hr) {
+function setCurrentDisplay(time, spO2Value, fiO2Value, hrValue) {
     apgarTime.update(time);
-    if (spO2 === null || isNaN(spO2)) {
-        spO2 = '???';
-    } else {
-        spO2 = Math.round(spO2 * 100) + '%';
-    }
-    document.getElementById('current-spo2-display').innerHTML = spO2;
-    updateFiO2(fiO2);
-    if (hr === null || isNaN(hr)) {
-        hr = '???';
+    spO2.update(spO2Value);
+    fiO2.update(fiO2Value);
+    hr.update(hrValue)
+    if (hrValue === undefined || hrValue === null || isNaN(hrValue)) {
         ecg.disconnect();
         ppg.disconnect();
     } else {
-        hr = Math.round(hr);
+        hrValue = Math.round(hrValue);
         ecg.connect();
         ppg.connect();
-        ecg.setFrequency(hr);
-        ppg.setFrequency(hr);
+        ecg.setFrequency(hrValue);
+        ppg.setFrequency(hrValue);
     }
-    document.getElementById('current-hr-display').innerHTML = hr;
 }
 
-function updateDisplay(time, spO2, fiO2, hr) {
+function updateDisplay(time, spO2Value, fiO2Value, hrValue) {
     var dateString = toDateString(time);
     if (time > 360) {
         chart.axis.tickFit(true);
         chart.axis.tickValues(undefined);
         chart.axis.tickCount(11);
     }
-    if (spO2 === null) {
-        spO2 = NaN;
-    }
-    if (fiO2 === null) {
-        fiO2 = NaN;
-    }
-    if (hr === null) {
-        hr = NaN;
-    }
+    if (spO2Value === null) spO2Value = NaN;
+    if (fiO2Value === null) fiO2Value = NaN;
+    if (hrValue === null) hrValue = NaN;
     chart.flow({
         columns: [
             ['signalTime', dateString],
-            ['SpO2', spO2],
-            ['FiO2', fiO2]
+            ['SpO2', spO2Value],
+            ['FiO2', fiO2Value]
         ],
         duration: 0,
         to: toDateString(0),
@@ -235,20 +238,18 @@ function updateDisplay(time, spO2, fiO2, hr) {
             if (time > 360) {
                 chart.axis.max({x: toDateString(Math.ceil(time / 60) * 60)});
             }
-            if (!isNaN(spO2) && !isNaN(fiO2)) {
+            if (!isNaN(spO2Value) && !isNaN(fiO2Value)) {
                 var annotationDeltaY = 0;
-                if (time > 360) {
-                    annotationDeltaY = -0.02;
-                }
+                if (time > 360) annotationDeltaY = -0.02;
                 chart.ygrids([
                     {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
-                    //{value: spO2 + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
-                    //{value: fiO2 + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+                    //{value: spO2Value + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+                    //{value: fiO2Value + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
                 ]);
             }
         }
     });
-    setCurrentDisplay(time, spO2, fiO2, hr);
+    setCurrentDisplay(time, spO2Value, fiO2Value, hrValue);
 }
 
 socket.on('connect', function(data) {
@@ -268,7 +269,7 @@ socket.on('initialize', function(data) {
         console.log('Sockets: Initializing.');
         chart.axis.max({x: toDateString(360)});
         document.getElementById('current-spo2-display').innerHTML = '???';
-        updateFiO2(0);
+        fiO2.update(fiO2.min);
         return;
     } else {
         console.log('Sockets: Initializing with previous data.');
@@ -333,14 +334,10 @@ socket.on('reset', function(data) {
         }
     });
 });
-socket.on('fiO2', function(data) {
-    console.log('Sockets: Updating FiO2 level to ' + data + '.');
-    updateFiO2(data);
-})
 socket.on('redirect', function(data) {
     console.log('Sockets: Redirecting to ' + data);
     window.location = data;
-})
+});
 </script>
 
 </body>

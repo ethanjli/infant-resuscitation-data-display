@@ -25,7 +25,7 @@
             <div class="row current-display-box">
                 <div class="col-md-8 col-sm-8 col-xs-10 col-md-offset-1 col-sm-offset-1">
                   <h1 class="current-display-label hr-color">HR:</h1>
-                  <h2 id="current-hr-display" class="current-display hr-color">???</h2>
+                  <h2 id="current-hr-display" class="current-display hr-color"></h2>
                   <canvas width="400" height="80" class="display-waveform" id="hr-ecg-display"></canvas>
                 </div>
                 <div class="col-md-3 col-sm-3 col-xs-2">
@@ -36,7 +36,7 @@
             <div class="row current-display-box">
                 <div class="col-md-8 col-sm-8 col-xs-10 col-md-offset-1 col-sm-offset-1">
                   <h1 class="current-display-label spo2-color">SpO<sub>2</sub>:</h1>
-                  <h2 id="current-spo2-display" class="current-display spo2-color">???</h2>
+                  <h2 id="current-spo2-display" class="current-display spo2-color"></h2>
                   <canvas width="400" height="80" class="display-waveform" id="spo2-ppg-display"></canvas>
                 </div>
             </div>
@@ -53,11 +53,26 @@ var apgarTime = new ReadableValue({
     elem: 'current-time-display',
     units: 'time',
     min: 0,
+    missingString: '???',
     socket: socket,
     messageName: 'tick'
 });
+var hr = new ReadableValue({
+    elem: 'current-hr-display',
+    units: 'bpm',
+    min: 0,
+    max: 200,
+    missingString: '???'
+});
 var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 3, 30, 60, 1, ecgData);
 ecg.draw();
+var spO2 = new ReadableValue({
+    elem: 'current-spo2-display',
+    units: '%',
+    min: 0,
+    max: 100,
+    missingString: '???'
+});
 var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 3, 40, 75, 1, ppgData);
 ppg.draw();
 
@@ -74,37 +89,20 @@ function updateStatusDisconnected() {
     statusElem.style.visibility = 'visible';
 }
 
-function setCurrentDisplay(time, spO2, fiO2, hr) {
+function setCurrentDisplay(time, spO2Value, fiO2, hrValue) {
     apgarTime.update(time);
-    if (spO2 === null || isNaN(spO2)) {
-        spO2 = '???';
-    } else {
-        spO2 = Math.round(spO2 * 100) + '%'
-    }
-    document.getElementById('current-spo2-display').innerHTML = spO2;
-    if (hr === null || isNaN(hr)) {
-        hr = '???';
+    spO2.update(spO2Value);
+    hr.update(hrValue);
+    if (hrValue === undefined || hrValue === null || isNaN(hrValue)) {
         ecg.disconnect();
         ppg.disconnect();
     } else {
-        hr = Math.round(hr);
+        hrValue = Math.round(hrValue);
         ecg.connect();
         ppg.connect();
-        ecg.setFrequency(hr);
-        ppg.setFrequency(hr);
+        ecg.setFrequency(hrValue);
+        ppg.setFrequency(hrValue);
     }
-    document.getElementById('current-hr-display').innerHTML = hr;
-}
-
-function updateDisplay(time, spO2, fiO2, hr) {
-    var dateString = toDateString(time);
-    if (spO2 === null) {
-        spO2 = NaN;
-    }
-    if (hr === null) {
-        hr = NaN;
-    }
-    setCurrentDisplay(time, spO2, fiO2, hr);
 }
 
 socket.on('connect', function(data) {
@@ -119,11 +117,11 @@ socket.on('disconnect', function(data) {
 socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');
-        document.getElementById('current-spo2-display').innerHTML = '???';
+        hr.update(null);
+        spO2.update(null);
         return;
-    } else {
-        console.log('Sockets: Initializing with previous data.');
     }
+    console.log('Sockets: Initializing with previous data.');
     setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1], data.hr[data.hr.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
@@ -131,7 +129,7 @@ socket.on('initialize', function(data) {
     spO2Signal.unshift('SpO2');
 });
 socket.on('update', function(data) {
-    updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
+    setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
 });
 socket.on('reset', function(data) {
     setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
