@@ -31,7 +31,6 @@ AdjustableValue.prototype.listen = function() {
     this.socket.on('disconnect', this.setReadOnly.bind(this));
     if (this.messageName) {
         this.socket.on(this.messageName, (function(newValue) {
-            console.log('Sockets: ' + this.updateMessage + newValue + '.');
             if (this.units === '%') newValue = Math.round(newValue * 100);
             this.update(newValue);
         }).bind(this));
@@ -403,6 +402,66 @@ SensorConnection.prototype.countDownDelayedConnection = function() {
     }
     SensorConnectionBehavior.delayedConnectionTimeout(this);
     this.delayedSensorConnectionBtn.innerHTML = 'Connecting now...';
+}
+
+function SocketConnection(options) {
+    this.connectionStatusElem = document.getElementById(options.connectionStatusElem);
+    this.displaysStatusElem = document.getElementById(options.displaysStatusElem);
+    this.hardwareStatusElem = document.getElementById(options.hardwareStatusElem);
+    this.socket = options.socket;
+    this.listen();
+}
+SocketConnection.prototype.listen = function() {
+    this.socket.on('connect', this.connected.bind(this));
+    this.socket.on('control-connection-info', this.multipleConnected.bind(this));
+    this.socket.on('display-connection-info', this.displaysConnected.bind(this));
+    this.socket.on('hardware-connection-info', this.hardwareConnected.bind(this));
+    this.socket.on('disconnect', this.disconnected.bind(this));
+}
+SocketConnection.prototype.connected = function() {
+    this.multipleConnected(1);
+    console.log('Sockets: Connected to server.');
+    this.socket.emit('connected', {client: 'control-panel'});
+}
+SocketConnection.prototype.disconnected = function() {
+    this.connectionStatusElem.innerHTML = 'Not connected to server';
+    this.connectionStatusElem.className = 'label label-danger';
+    console.log('Sockets: Disconnected from server.');
+}
+SocketConnection.prototype.multipleConnected = function(numControlPanels) {
+    if (numControlPanels === 1) {
+        this.connectionStatusElem.innerHTML = 'Connected to server';
+        this.connectionStatusElem.className = 'label label-success';
+        return;
+    }
+    this.connectionStatusElem.innerHTML = numControlPanels + ' control pannels connected to server';
+    this.connectionStatusElem.className = 'label label-info';
+}
+SocketConnection.prototype.displaysConnected = function(numDisplays) {
+    if (numDisplays === 0) {
+        this.displaysStatusElem.innerHTML = 'No display connected to server';
+        this.displaysStatusElem.className = 'label label-warning';
+        return;
+    }
+    if (numDisplays === 1) {
+        this.displaysStatusElem.innerHTML = 'Display connected to server';
+    } else {
+        this.displaysStatusElem.innerHTML = numDisplays + ' displays connected to server';
+    }
+    this.displaysStatusElem.className = 'label label-success';
+}
+SocketConnection.prototype.hardwareConnected = function(numHardwareInterfaces) {
+    if (numHardwareInterfaces === 0) {
+        this.hardwareStatusElem.innerHTML = 'No hardware interface connected to server';
+        this.hardwareStatusElem.className = 'label label-warning';
+        return;
+    }
+    if (numHardwareInterfaces === 1) {
+        this.hardwareStatusElem.innerHTML = 'Hardware interface connected to server';
+    } else {
+        this.hardwareStatusElem.innerHTML = numHardwareInterfaces + ' hardware interfaces connected to server';
+    }
+    this.hardwareStatusElem.className = 'label label-success';
 }
 
 function NRPTargets(options) {

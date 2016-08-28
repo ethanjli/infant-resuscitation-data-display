@@ -188,6 +188,13 @@
 <script>
 var socket = io.connect(window.location.host);
 
+var socketConnection = new SocketConnection({
+    connectionStatusElem: 'status-connection',
+    displaysStatusElem: 'status-displays',
+    hardwareStatusElem: 'status-hardware',
+    socket: socket
+});
+
 var simulation = new Simulation({
     socket: socket,
     startResetBtn: 'btn-startreset-simulation',
@@ -286,81 +293,9 @@ var nrpTargets = new NRPTargets({
     socket: socket
 });
 
-function updateStatusConnected() {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = 'Connected to server';
-    statusElem.className = 'label label-success';
-}
-function updateStatusDisconnected() {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = 'Not connected to server';
-    statusElem.className = 'label label-danger';
-}
-function updateStatusMultipleConnected(numControlPanels) {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = numControlPanels + ' control panels connected to server';
-    statusElem.className = 'label label-info';
-}
-function updateStatusDisplaysConnected(numDisplays) {
-    var statusElem = document.getElementById('status-displays');
-    if (numDisplays > 1) {
-        statusElem.innerHTML = numDisplays + ' displays connected to server';
-    } else if (numDisplays === 1) {
-        statusElem.innerHTML = 'Display connected to server';
-    }
-    statusElem.className = 'label label-success';
-}
-function updateStatusDisplaysDisconnected() {
-    var statusElem = document.getElementById('status-displays');
-    statusElem.innerHTML = 'No display connected to server';
-    statusElem.className = 'label label-warning';
-}
-function updateStatusHardwareConnected(numDisplays) {
-    var statusElem = document.getElementById('status-hardware');
-    if (numDisplays > 1) {
-        statusElem.innerHTML = numDisplays + ' hardware interfaces connected to server';
-    } else if (numDisplays === 1) {
-        statusElem.innerHTML = 'Hardware interface connected to server';
-    }
-    fiO2.setReadOnly();
-    statusElem.className = 'label label-success';
-}
-function updateStatusHardwareDisconnected() {
-    var statusElem = document.getElementById('status-hardware');
-    statusElem.innerHTML = 'No hardware interface connected to server';
-    statusElem.className = 'label label-warning';
-    fiO2.setWritable();
-}
-
-socket.on('connect', function(data) {
-    socket.emit('connected', {client: 'control-panel'});
-    console.log('Sockets: Connected to server.');
-    updateStatusConnected();
-});
-socket.on('disconnect', function(data) {
-    console.log('Sockets: Disconnected from server.');
-    updateStatusDisconnected();
-});
-socket.on('control-connection-info', function(data) {
-    if (data > 1) {
-        updateStatusMultipleConnected(data);
-    } else if (data == 1) {
-        updateStatusConnected();
-    }
-});
-socket.on('display-connection-info', function(data) {
-    if (data > 0) {
-        updateStatusDisplaysConnected(data);
-    } else {
-        updateStatusDisplaysDisconnected();
-    }
-});
 socket.on('hardware-connection-info', function(data) {
-    if (data > 0) {
-        updateStatusHardwareConnected(data);
-    } else {
-        updateStatusHardwareDisconnected();
-    }
+    if (data > 0) fiO2.setReadOnly();
+    else fiO2.setWritable();
 });
 
 document.getElementById('btn-minimal-display').onclick = function() {
