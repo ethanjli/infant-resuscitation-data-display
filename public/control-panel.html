@@ -67,9 +67,6 @@
                                         <button type="button" id="btn-delayedconnect-sensors" class="btn btn-default"></button>
                                     </div>
                                 </div>
-                            </form>
-                            <hr>
-                            <form class="form-horizontal">
                                 <div class="form-group">
                                     <div class="row">
                                         <label>Display</label>
@@ -99,14 +96,14 @@
                                     <div class="row">
                                         <label>SpO<small>2</small> Signal Parameters</label>
                                     </div>
-                                    <label for="input-spo2" class="col-sm-5 control-label">Signal Mean</label>
+                                    <label for="input-spo2" class="col-sm-6 control-label">Signal Mean</label>
                                     <div class="input-group col-sm-5">
                                         <input type="number" id="input-spo2" class="form-control">
                                         <div id="input-spo2-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="input-spo2-noise" class="col-sm-5 control-label">Signal Standard Deviation</label>
+                                    <label for="input-spo2-noise" class="col-sm-6 control-label">Signal Standard Deviation</label>
                                     <div class="input-group col-sm-5">
                                         <input type="number" id="input-spo2-noise" class="form-control">
                                         <div id="input-spo2-noise-units" class="input-group-addon"></div>
@@ -116,14 +113,17 @@
                                     <div class="row">
                                         <label>Auto-Adjust Signal Mean</label>
                                     </div>
-                                    <div class="btn-group-vertical" role="group">
-                                        <button type="button" id="btn-spo2-autoincrease" class="btn btn-default"></button>
-                                        <button type="button" id="btn-spo2-autodecrease" class="btn btn-default"></button>
+                                    <div class="input-group col-sm-10 col-sm-offset-1">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" id="btn-spo2-autoadjust"></button>
+                                        </span>
+                                        <input type="number" class="form-control" id="input-spo2-autoadjust-target">
+                                        <div id="input-spo2-autoadjust-target-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="form-group">
-                                    <label for="input-hr" class="col-sm-5 control-label">Heart Rate</label>
+                                    <label for="input-hr" class="col-sm-6 control-label">Heart Rate</label>
                                     <div class="input-group col-sm-5">
                                         <input type="number" id="input-hr" class="form-control">
                                         <div id="input-hr-units" class="input-group-addon"></div>
@@ -133,9 +133,12 @@
                                     <div class="row">
                                         <label>Auto-Adjust Heart Rate</label>
                                     </div>
-                                    <div class="btn-group-vertical" role="group">
-                                        <button type="button" id="btn-hr-autoincrease" class="btn btn-default"></button>
-                                        <button type="button" id="btn-hr-autodecrease" class="btn btn-default"></button>
+                                    <div class="input-group col-sm-10 col-sm-offset-1">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" id="btn-hr-autoadjust"></button>
+                                        </span>
+                                        <input type="number" class="form-control" id="input-hr-autoadjust-target">
+                                        <div id="input-hr-autoadjust-target-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
                             </form>
@@ -203,8 +206,9 @@ var spO2 = new AdjustableValue({
 });
 var spO2AutoAdjuster = new AutoAdjuster({
     adjustableValue: spO2,
-    autoIncreaseBtn: 'btn-spo2-autoincrease',
-    autoDecreaseBtn: 'btn-spo2-autodecrease',
+    autoAdjustTargetInputElem: 'input-spo2-autoadjust-target',
+    autoAdjustTargetUnitsElem: 'input-spo2-autoadjust-target-units',
+    autoAdjustBtn: 'btn-spo2-autoadjust',
     incrementStep: 1,
     timeStep: 2
 });
@@ -236,8 +240,9 @@ var hr = new AdjustableValue({
 });
 var hrAutoAdjuster = new AutoAdjuster({
     adjustableValue: hr,
-    autoIncreaseBtn: 'btn-hr-autoincrease',
-    autoDecreaseBtn: 'btn-hr-autodecrease',
+    autoAdjustTargetInputElem: 'input-hr-autoadjust-target',
+    autoAdjustTargetUnitsElem: 'input-hr-autoadjust-target-units',
+    autoAdjustBtn: 'btn-hr-autoadjust',
     incrementStep: 5,
     timeStep: 2
 });
