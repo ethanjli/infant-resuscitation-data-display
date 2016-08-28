@@ -57,6 +57,10 @@
 
 <script>
 var socket = io.connect(window.location.host);
+var socketConnection = new SocketConnection({
+    connectionStatusElem: 'status-connection',
+    socket: socket
+});
 var apgarTime = new ReadableValue({
     elem: 'current-time-display',
     units: 'time',
@@ -91,19 +95,6 @@ var fiO2 = new ReadableValue({
     socket: socket,
     messageName: 'fiO2'
 });
-
-function updateStatusConnected() {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = 'Connected to sensors';
-    statusElem.className = 'label label-default';
-    statusElem.style.visibility = 'hidden';
-}
-function updateStatusDisconnected() {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = 'Not connected to sensors!';
-    statusElem.className = 'label label-danger';
-    statusElem.style.visibility = 'visible';
-}
 
 var chart = c3.generate({
     bindto: '#chart',
@@ -253,27 +244,22 @@ function updateDisplay(time, spO2Value, fiO2Value, hrValue) {
 }
 
 socket.on('connect', function(data) {
-    socket.emit('connected', {client: 'display-panel'});
-    console.log('Sockets: Connected to server.');
     chart.unload({
-        ids: ['signalTime', 'SpO2', 'FiO2'],
-        done: updateStatusConnected
+        ids: ['signalTime', 'SpO2', 'FiO2']
     });
-})
-socket.on('disconnect', function(data) {
-    console.log('Sockets: Disconnected from server.');
-    updateStatusDisconnected();
 })
 socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');
         chart.axis.max({x: toDateString(360)});
-        document.getElementById('current-spo2-display').innerHTML = '???';
+        spO2.update(null);
+        hr.update(null);
         fiO2.update(fiO2.min);
         return;
     } else {
         console.log('Sockets: Initializing with previous data.');
     }
+    console.log(data);
     setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1], data.hr[data.hr.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');

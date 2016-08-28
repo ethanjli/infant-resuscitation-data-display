@@ -108,3 +108,26 @@ var ppgData = [
     0.45, 0.35, 0.3, 0.225, 0.2, 0.175, 0.1537947998046875, 0.125, 0.1, 0.075,
     0.0625, 0.05, 0.03125, 0.025, 0.0125, 0.0111041259765625, 0.0025, 0,
 ];
+
+function SocketConnection(options) {
+    this.connectionStatusElem = document.getElementById(options.connectionStatusElem);
+    this.socket = options.socket;
+    this.listen();
+}
+SocketConnection.prototype.listen = function() {
+    this.socket.on('connect', this.connected.bind(this));
+    this.socket.on('disconnect', this.disconnected.bind(this));
+}
+SocketConnection.prototype.connected = function() {
+    this.connectionStatusElem.innerHTML = 'Connected to simulation control room';
+    this.connectionStatusElem.className = 'label label-default';
+    this.connectionStatusElem.style.visibility = 'hidden';
+    console.log('Sockets: Connected to server.');
+    this.socket.emit('connected', {client: 'display-panel'});
+}
+SocketConnection.prototype.disconnected = function() {
+    this.connectionStatusElem.innerHTML = 'Not connected to simulation control room!';
+    this.connectionStatusElem.className = 'label label-danger';
+    this.connectionStatusElem.style.visibility = 'visible';
+    console.log('Sockets: Disconnected from server.');
+}

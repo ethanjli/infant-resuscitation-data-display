@@ -49,6 +49,10 @@
 
 <script>
 var socket = io.connect(window.location.host);
+var socketConnection = new SocketConnection({
+    connectionStatusElem: 'status-connection',
+    socket: socket
+});
 var apgarTime = new ReadableValue({
     elem: 'current-time-display',
     units: 'time',
@@ -76,19 +80,6 @@ var spO2 = new ReadableValue({
 var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 3, 40, 75, 1, ppgData);
 ppg.draw();
 
-function updateStatusConnected() {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = 'Connected to sensors';
-    statusElem.className = 'label label-default';
-    statusElem.style.visibility = 'hidden';
-}
-function updateStatusDisconnected() {
-    var statusElem = document.getElementById('status-connection');
-    statusElem.innerHTML = 'Not connected to sensors!';
-    statusElem.className = 'label label-danger';
-    statusElem.style.visibility = 'visible';
-}
-
 function setCurrentDisplay(time, spO2Value, fiO2, hrValue) {
     apgarTime.update(time);
     spO2.update(spO2Value);
@@ -105,15 +96,6 @@ function setCurrentDisplay(time, spO2Value, fiO2, hrValue) {
     }
 }
 
-socket.on('connect', function(data) {
-    socket.emit('connected', {client: 'display-panel'});
-    console.log('Sockets: Connected to server.');
-    updateStatusConnected();
-})
-socket.on('disconnect', function(data) {
-    console.log('Sockets: Disconnected from server.');
-    updateStatusDisconnected();
-})
 socket.on('initialize', function(data) {
     if (data === null) {
         console.log('Sockets: Initializing.');

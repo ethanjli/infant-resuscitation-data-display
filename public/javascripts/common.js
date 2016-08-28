@@ -20,7 +20,6 @@ function ReadableValue(options) {
     if (this.socket) this.listen();
 }
 ReadableValue.prototype.update = function(newValue) {
-    console.log(this.units, newValue);
     if (newValue === undefined || newValue === null || isNaN(newValue)) {
         this.elem.innerHTML = this.missingString;
         return;
