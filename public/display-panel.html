@@ -75,8 +75,6 @@ var hr = new ReadableValue({
     max: 200,
     missingString: '???'
 });
-var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 2, 20, 40, 0.5, ecgData);
-ecg.draw();
 var spO2 = new ReadableValue({
     elem: 'current-spo2-display',
     units: '%',
@@ -84,8 +82,6 @@ var spO2 = new ReadableValue({
     max: 1,
     missingString: '???'
 });
-var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 2, 24, 48, 0.5, ppgData);
-ppg.draw();
 var fiO2 = new ReadableValue({
     elem: 'current-fio2-display',
     units: '%',
@@ -94,6 +90,24 @@ var fiO2 = new ReadableValue({
     missingString: '???',
     socket: socket,
     messageName: 'fiO2'
+});
+var ppg = new WaveformDisplay({
+    canvasElem: 'spo2-ppg-display',
+    color: '#00FFFF',
+    thickness: 2,
+    amplitudeGain: 24,
+    constantGain: 48,
+    scanSpeed: 0.5,
+    data: ppgData
+});
+var ecg = new WaveformDisplay({
+    canvasElem: 'hr-ecg-display',
+    color: '#F0E442',
+    thickness: 2,
+    amplitudeGain: 20,
+    constantGain: 40,
+    scanSpeed: 0.5,
+    data: ecgData
 });
 
 var chart = c3.generate({
@@ -199,7 +213,6 @@ function setCurrentDisplay(time, spO2Value, fiO2Value, hrValue) {
         ecg.disconnect();
         ppg.disconnect();
     } else {
-        hrValue = Math.round(hrValue);
         ecg.connect();
         ppg.connect();
         ecg.setFrequency(hrValue);
@@ -255,11 +268,12 @@ socket.on('initialize', function(data) {
         spO2.update(null);
         hr.update(null);
         fiO2.update(fiO2.min);
+        ecg.disconnect();
+        ppg.disconnect();
         return;
     } else {
         console.log('Sockets: Initializing with previous data.');
     }
-    console.log(data);
     setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1], data.hr[data.hr.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');

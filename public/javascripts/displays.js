@@ -3,25 +3,28 @@ function fromDateString(dateString) {
     return a[0] * 60 + a[1] * 1;
 }
 
-function WaveformDisplay(canvasElemId, color, thickness, amplitudeGain, constantGain, scanSpeed, data) {
-    this.canvas = document.getElementById(canvasElemId);
+function WaveformDisplay(options) {
+    this.canvas = document.getElementById(options.canvasElem);
     this.ctx = this.canvas.getContext('2d');
     this.scanBarWidth = 10;
-    this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = thickness;
-    this.scanSpeed = scanSpeed;
+    this.ctx.strokeStyle = options.color;
+    this.ctx.lineWidth = options.thickness;
+    this.scanSpeed = options.scanSpeed;
+    this.samplesPerFrame = 4;
     this.connected = false;
-    this.signalLength = data.length;
+    this.signalLength = options.data.length;
 
-    this.amplitudeGain = amplitudeGain;
-    this.constantGain = constantGain;
-    this.data = data;
+    this.amplitudeGain = options.amplitudeGain;
+    this.constantGain = options.constantGain;
+    this.data = options.data;
 
     this.n = 0;
     this.x = 0;
     this.xOld = this.x;
     this.y = this.sample();
     this.yOld = this.y;
+
+    this.draw();
 }
 WaveformDisplay.prototype.sample = function() {
     var sample = 0;
@@ -35,28 +38,37 @@ WaveformDisplay.prototype.drawCurrentSegment = function() {
     ctx.lineTo(this.x, this.y);
     ctx.stroke();
 }
+WaveformDisplay.prototype.scanSegment = function() {
+    this.y = this.sample();
+    this.n++;
+    if (this.n >= this.signalLength) this.n = 0;
+    this.x += this.scanSpeed;
+
+    this.drawCurrentSegment();
+
+    this.xOld = this.x;
+    this.yOld = this.y;
+    if (this.xOld > this.canvas.width) this.x = this.xOld = -1 * this.scanSpeed;
+}
+WaveformDisplay.prototype.scanFrame = function() {
+    for (var i = 0; i < this.samplesPerFrame; i++) {
+        this.scanSegment();
+    }
+    this.drawScanBar();
+}
+WaveformDisplay.prototype.clearCanvas = function() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+}
+WaveformDisplay.prototype.drawScanBar = function() {
+    this.ctx.clearRect(this.x, 0, this.scanBarWidth, this.canvas.height);
+}
 WaveformDisplay.prototype.draw = function() {
     setTimeout((function() {
         requestAnimationFrame(this.draw.bind(this));
         // 75 samples corresponds to 47 bpm at 60 fps, so we draw 4 samples per frame
 
-        if (this.connected) {
-            for (var i = 0; i < 4; i++) {
-                this.y = this.sample();
-                this.n++;
-                if (this.n >= this.signalLength) this.n = 0;
-                this.x += this.scanSpeed;
-
-                this.drawCurrentSegment();
-
-                this.xOld = this.x;
-                this.yOld = this.y;
-                if (this.xOld > this.canvas.width) this.x = this.xOld = -1 * this.scanSpeed;
-            }
-            this.ctx.clearRect(this.x, 0, this.scanBarWidth, this.canvas.height);
-        } else {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
+        if (this.connected) this.scanFrame();
+        else this.clearCanvas();
     }).bind(this), 1000 / 60);
 }
 WaveformDisplay.prototype.connect = function() {
@@ -71,8 +83,8 @@ WaveformDisplay.prototype.setFrequency = function(frequency) {
         this.signalLength = 0;
         return;
     }
-    // 200 bpm is 75, so 100 bpm is 75 * 2
-    this.signalLength = this.data.length * 200 / frequency;
+    // 200 bpm is 75 cycles/minute, so 100 bpm is 75 * 2 cycles/minute
+    this.signalLength = Math.floor(this.data.length * 200 / frequency);
 }
 
 var ecgData = [

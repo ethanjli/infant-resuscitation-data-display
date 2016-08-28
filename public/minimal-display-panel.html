@@ -68,8 +68,6 @@ var hr = new ReadableValue({
     max: 200,
     missingString: '???'
 });
-var ecg = new WaveformDisplay('hr-ecg-display', '#F0E442', 3, 30, 60, 1, ecgData);
-ecg.draw();
 var spO2 = new ReadableValue({
     elem: 'current-spo2-display',
     units: '%',
@@ -77,8 +75,24 @@ var spO2 = new ReadableValue({
     max: 100,
     missingString: '???'
 });
-var ppg = new WaveformDisplay('spo2-ppg-display', '#00FFFF', 3, 40, 75, 1, ppgData);
-ppg.draw();
+var ppg = new WaveformDisplay({
+    canvasElem: 'spo2-ppg-display',
+    color: '#00FFFF',
+    thickness: 3,
+    amplitudeGain: 40,
+    constantGain: 75,
+    scanSpeed: 1,
+    data: ppgData
+});
+var ecg = new WaveformDisplay({
+    canvasElem: 'hr-ecg-display',
+    color: '#F0E442',
+    thickness: 3,
+    amplitudeGain: 30,
+    constantGain: 60,
+    scanSpeed: 1,
+    data: ecgData
+});
 
 function setCurrentDisplay(time, spO2Value, fiO2, hrValue) {
     apgarTime.update(time);
@@ -88,7 +102,6 @@ function setCurrentDisplay(time, spO2Value, fiO2, hrValue) {
         ecg.disconnect();
         ppg.disconnect();
     } else {
-        hrValue = Math.round(hrValue);
         ecg.connect();
         ppg.connect();
         ecg.setFrequency(hrValue);
@@ -101,6 +114,8 @@ socket.on('initialize', function(data) {
         console.log('Sockets: Initializing.');
         hr.update(null);
         spO2.update(null);
+        ecg.disconnect();
+        ppg.disconnect();
         return;
     }
     console.log('Sockets: Initializing with previous data.');
