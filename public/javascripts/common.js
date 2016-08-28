@@ -9,6 +9,25 @@ function toDateString(totalSeconds) {
     return (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
 }
 
+var nrpTarget = {
+    time: [60, 300, 600, 2400],
+    upper: [0.65, 0.85, 0.95, 0.95],
+    lower: [0.6, 0.8, 0.85, 0.85]
+};
+function getTargetRange(time) {
+    var upper = NaN;
+    var lower = NaN;
+    if (time >= nrpTarget.time[0]) {
+        upper = everpolate.linear(time, nrpTarget.time, nrpTarget.upper)[0];
+        lower = everpolate.linear(time, nrpTarget.time, nrpTarget.lower)[0];
+    }
+    return {
+        upper: upper,
+        lower: lower,
+        mid: 0.5 * (upper + lower)
+    };
+}
+
 function ReadableValue(options) {
     this.elem = document.getElementById(options.elem);
     this.units = options.units;
@@ -35,6 +54,6 @@ ReadableValue.prototype.update = function(newValue) {
     this.elem.innerHTML = newValue;
 }
 ReadableValue.prototype.listen = function() {
-    this.socket.on(this.messageName, this.update.bind(this));
+    if (this.messageName) this.socket.on(this.messageName, this.update.bind(this));
 }
 

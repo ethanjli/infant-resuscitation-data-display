@@ -14,7 +14,7 @@
 <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
 <script src="/javascripts/c3.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.2/p5.min.js"></script>
+<script src="/javascripts/everpolate.browserified.min.js"></script>
 
 <link type="text/css" rel="stylesheet" href="/stylesheets/texgyreheros.css">
 <link type="text/css" rel="stylesheet" href="/stylesheets/display_panel.css">
@@ -125,6 +125,9 @@ var chart = c3.generate({
         },
         xFormat: '%M:%S',
         columns: [
+            ['targetTime'].concat(nrpTarget.time.map(toDateString)),
+            ['targetUpper'].concat(nrpTarget.upper),
+            ['targetLower'].concat(nrpTarget.lower),
             ['targetTime', toDateString(60), toDateString(300), toDateString(600), toDateString(2400)],
             ['targetUpper', 0.65, 0.85, 0.95, 0.95],
             ['targetLower', 0.6, 0.8, 0.85, 0.85],

@@ -404,3 +404,27 @@ SensorConnection.prototype.countDownDelayedConnection = function() {
     SensorConnectionBehavior.delayedConnectionTimeout(this);
     this.delayedSensorConnectionBtn.innerHTML = 'Connecting now...';
 }
+
+function NRPTargets(options) {
+    options.units = '%';
+    options.min = 0;
+    options.max = 1;
+    options.missingString = 'N/A';
+    this.minValue = new ReadableValue(_.assign(options, {elem: options.minElem}));
+    this.maxValue = new ReadableValue(_.assign(options, {elem: options.maxElem}));
+    this.midValue = new ReadableValue(_.assign(options, {elem: options.midElem}));
+    this.socket = options.socket;
+    this.messageName = 'tick';
+    if (this.socket) this.listen();
+}
+NRPTargets.prototype.update = function(time) {
+    var targetRange = getTargetRange(time);
+    console.log(time, targetRange);
+    this.minValue.update(targetRange.lower);
+    this.maxValue.update(targetRange.upper);
+    this.midValue.update(targetRange.mid);
+}
+NRPTargets.prototype.listen = function() {
+    this.socket.on(this.messageName, this.update.bind(this));
+}
+

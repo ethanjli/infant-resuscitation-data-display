@@ -12,6 +12,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/machina.js/2.0.0/machina.min.js"></script>
+<script src="/javascripts/everpolate.browserified.min.js"></script>
 
 <script src="/javascripts/common.js"></script>
 <script src="/javascripts/controls.js"></script>
@@ -157,6 +158,24 @@
                                         <div id="input-fio2-units" class="input-group-addon"></div>
                                     </div>
                                 </div>
+                                <hr>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>NRP Targets</label>
+                                    </div>
+                                    <label class="col-sm-6 control-label">Min</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="nrp-target-min"></p>
+                                    </div>
+                                    <label class="col-sm-6 control-label">Mid</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="nrp-target-mid"></p>
+                                    </div>
+                                    <label class="col-sm-6 control-label">Max</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="nrp-target-max"></p>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -258,6 +277,13 @@ var fiO2 = new AdjustableValue({
     socket: socket,
     messageName: 'fiO2',
     updateMessage: 'Updating FiO2 level to '
+});
+
+var nrpTargets = new NRPTargets({
+    minElem: 'nrp-target-min',
+    maxElem: 'nrp-target-max',
+    midElem: 'nrp-target-mid',
+    socket: socket
 });
 
 function updateStatusConnected() {
