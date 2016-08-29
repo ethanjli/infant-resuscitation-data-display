@@ -244,6 +244,9 @@ var SimulationBehavior = new machina.BehavioralFsm({
             disconnectSocket: 'waitingForResponse'
         },
         running: {
+            _onEnter: function(client) {
+                client.pauseResumeBtn.innerHTML = 'Pause';
+            },
             reset: 'ready',
             pause: 'paused',
             clickStartReset: function(client) {
