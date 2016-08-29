@@ -14,10 +14,10 @@ var nrpTarget = {
     upper: [0.65, 0.85, 0.95, 0.95],
     lower: [0.6, 0.8, 0.85, 0.85]
 };
-function getTargetRange(time) {
+function getTargetRange(time, strictTime) {
     var upper = NaN;
     var lower = NaN;
-    if (time >= nrpTarget.time[0]) {
+    if (!strictTime || time >= nrpTarget.time[0]) {
         upper = everpolate.linear(time, nrpTarget.time, nrpTarget.upper)[0];
         lower = everpolate.linear(time, nrpTarget.time, nrpTarget.lower)[0];
     }

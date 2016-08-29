@@ -294,11 +294,10 @@ ppvResponse.getSpO2ResponseTarget = function() {
     var fiO2Value = fiO2.rawValue * 0.01;
     if (fiO2Value <= 0.21) return 0.3;
     else if (0.21 < fiO2Value && fiO2Value <= 0.34) return 0.4;
-    else if (0.34 < fiO2Value && fiO2Value <= 0.59) return getTargetRange(apgarTime.rawValue).min - 0.1;
-    else if (0.59 < fiO2Value && fiO2Value <= 0.89) return getTargetRange(apgarTime.rawValue).min - 0.05;
+    else if (0.34 < fiO2Value && fiO2Value <= 0.59) return getTargetRange(apgarTime.rawValue).lower - 0.1;
+    else if (0.59 < fiO2Value && fiO2Value <= 0.89) return getTargetRange(apgarTime.rawValue).lower - 0.05;
     else return getTargetRange(apgarTime.rawValue).mid;
 }
-InterventionResponseBehavior.reset(ppvResponse);
 
 var ccResponse = new InterventionResponse({
     interventionBtn: 'btn-cc',
@@ -323,7 +322,6 @@ ccResponse.updateResponse = function() {
         AutoAdjusterBehavior.adjust(rrAutoAdjuster);
     }
 }
-InterventionResponseBehavior.reset(ccResponse);
 
 socket.on('hardware-connection-info', function(data) {
     if (data > 0) fiO2.setReadOnly();

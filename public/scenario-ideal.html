@@ -295,9 +295,8 @@ ppvResponse.getSpO2ResponseTarget = function() {
     if (fiO2Value <= 0.21) return 0.5;
     else if (0.21 < fiO2Value && fiO2Value <= 0.25) return 0.55;
     else if (0.25 < fiO2Value && fiO2Value <= 0.34) return getTargetRange(apgarTime.rawValue).mid;
-    else return 0.05 + getTargetRange(apgarTime.rawValue).max;
+    else return 0.05 + getTargetRange(apgarTime.rawValue).upper;
 }
-InterventionResponseBehavior.reset(ppvResponse);
 
 socket.on('hardware-connection-info', function(data) {
     if (data > 0) fiO2.setReadOnly();

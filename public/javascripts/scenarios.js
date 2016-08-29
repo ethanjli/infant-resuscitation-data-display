@@ -177,6 +177,7 @@ function InterventionResponse(options) {
 }
 InterventionResponse.prototype.listen = function() {
     this.socket.on('reset', InterventionResponseBehavior.reset.bind(InterventionResponseBehavior, this));
+    this.socket.on('connect', InterventionResponseBehavior.reset.bind(InterventionResponseBehavior, this));
     this.socket.on('simulation-state-info', (function(data) {
         if (data === 'ready') InterventionResponseBehavior.reset(this);
     }).bind(this));

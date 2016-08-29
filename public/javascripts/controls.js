@@ -228,7 +228,6 @@ var SimulationBehavior = new machina.BehavioralFsm({
                 client.pauseResumeBtn.disabled = 'disabled';
                 client.downloadBtn.disabled = 'disabled';
                 client.runningToPause = true;
-                console.log(client.runningToPause);
             },
             _onExit: function(client) {
                 client.startResetBtn.innerHTML = 'Reset';
