@@ -94,7 +94,10 @@
                                     <div class="row">
                                         <label>Intervention</label>
                                     </div>
-                                    <button type="button" id="btn-intervention" class="btn btn-default"></button>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-intervention" class="btn btn-default"></button>
+                                        <button type="button" id="btn-intervention-immediate" class="btn btn-default"></button>
+                                    </div>
                                 </div>
                                 <hr>
                                 <div class="form-group">
@@ -115,7 +118,7 @@
                             <form class="form-horizontal">
                                 <div class="form-group">
                                     <div class="row">
-                                        <label>Readings</label>
+                                        <label>Vital Signs</label>
                                     </div>
                                     <label class="col-sm-6 control-label">SpO<small>2</small></label>
                                     <div class="col-sm-6">
@@ -133,7 +136,7 @@
                                 <hr>
                                 <div class="form-group">
                                     <div class="row">
-                                        <label>NRP Targets</label>
+                                        <label>Current NRP Target Range</label>
                                     </div>
                                     <label class="col-sm-6 control-label">Min</label>
                                     <div class="col-sm-6">
@@ -223,6 +226,19 @@ var hrAutoAdjuster = new AutoAdjuster({
     timeStep: 2
 });
 
+var rr = new AdjustableValue({
+    elem: 'rr-display',
+    units: ' bpm',
+    min: 0,
+    max: 50,
+    socket: socket
+});
+var rrAutoAdjuster = new AutoAdjuster({
+    adjustableValue: rr,
+    incrementStep: 2,
+    timeStep: 2
+});
+
 var fiO2 = new AdjustableValue({
     inputElem: 'input-fio2',
     unitsElem: 'input-fio2-units',
@@ -245,18 +261,34 @@ var nrpTargets = new NRPTargets({
 
 var interventionResponse = new InterventionResponse({
     interventionBtn: 'btn-intervention',
+    immediateInterventionBtn: 'btn-intervention-immediate',
     delay: 15,
     startInterventionText: 'Begin PPV',
+    startInterventionImmediatelyText: 'PPV Began >15 Sec. Ago',
     cancelInterventionText: 'Cancel PPV',
     respondingText: 'Responding to FiO2',
+    stopRespondingText: 'Stop Responding to FiO2',
     socket: socket
 });
 interventionResponse.onDelivered = function() {
-    console.log('Scenario: Infant delivered.')
     spO2.update(50, true);
     hr.update(140, true);
+    rr.update(0);
 }
-interventionResponse.getResponseTarget = function() {
+interventionResponse.onResponding = function() {
+    console.log('Scenario: Now responding to FiO2.');
+    this.updateResponse();
+    rrAutoAdjuster.autoAdjustTargetValue.update(30, true);
+    AutoAdjusterBehavior.adjust(rrAutoAdjuster);
+}
+interventionResponse.updateResponse = function() {
+    var responseTarget = this.getSpO2ResponseTarget();
+    if (!responseTarget) return;
+    responseTarget = Math.round(100 * responseTarget);
+    spO2AutoAdjuster.autoAdjustTargetValue.update(responseTarget, true);
+    AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
+}
+interventionResponse.getSpO2ResponseTarget = function() {
     var fiO2Value = fiO2.rawValue * 0.01;
     if (fiO2Value <= 0.21) return 0.5;
     else if (0.21 < fiO2Value && fiO2Value <= 0.25) return 0.55;

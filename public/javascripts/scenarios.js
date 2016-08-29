@@ -102,17 +102,21 @@ SensorConnection.prototype.countDownDelayedConnection = function() {
 
 var InterventionResponseBehavior = new machina.BehavioralFsm({
     namespace: 'InterventionResponse',
-    initialState: 'uninitialized',
+    initialState: 'delivered',
     states: {
-        uninitialized: {
-            reset: 'delivered'
-        },
         delivered: {
             _onEnter: function(client) {
                 client.interventionBtn.innerHTML = client.startInterventionText;
+                client.immediateInterventionBtn.innerHTML = client.startInterventionImmediatelyText;
+                client.responding = false;
                 client.onDelivered();
             },
-            clickIntervention: 'interventionStarted'
+            clickIntervention: 'interventionStarted',
+            clickImmediateIntervention: 'responding',
+            reset: function(client) {
+                client.responding = false;
+                client.onDelivered();
+            }
         },
         interventionStarted: {
             _onEnter: function(client) {
@@ -123,6 +127,7 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
                 if (client.interventionResponseTimer) clearInterval(client.interventionResponseTimer);
             },
             clickIntervention: 'delivered',
+            clickImmediateIntervention: 'responding',
             interventionResponseTimeout: 'responding',
             reset: 'delivered'
         },
@@ -130,11 +135,14 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.interventionBtn.innerHTML = client.respondingText;
                 client.interventionBtn.disabled = 'disabled';
+                client.immediateInterventionBtn.innerHTML = client.stopRespondingText;
+                client.responding = true;
                 client.onResponding();
             },
             _onExit: function(client) {
                 client.interventionBtn.disabled = '';
             },
+            clickImmediateIntervention: 'delivered',
             reset: 'delivered'
         }
     },
@@ -144,19 +152,26 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
     clickIntervention: function(client) {
         this.handle(client, 'clickIntervention');
     },
+    clickImmediateIntervention: function(client) {
+        this.handle(client, 'clickImmediateIntervention');
+    },
     interventionResponseTimeout: function(client) {
         this.handle(client, 'interventionResponseTimeout');
     }
 });
 function InterventionResponse(options) {
     this.interventionBtn = document.getElementById(options.interventionBtn);
+    this.immediateInterventionBtn = document.getElementById(options.immediateInterventionBtn);
     this.delay = options.delay;
     this.startInterventionText = options.startInterventionText;
+    this.startInterventionImmediatelyText = options.startInterventionImmediatelyText;
     this.cancelInterventionText = options.cancelInterventionText;
     this.respondingText = options.respondingText;
+    this.stopRespondingText = options.stopRespondingText;
     this.interventionResponseTimer = null;
     this.timeUntilResponse = 0;
     this.socket = options.socket;
+    this.responding = false;
     this.listen();
     this.monitor();
 }
@@ -165,9 +180,16 @@ InterventionResponse.prototype.listen = function() {
     this.socket.on('simulation-state-info', (function(data) {
         if (data === 'ready') InterventionResponseBehavior.reset(this);
     }).bind(this));
+    this.socket.on('tick', (function() {
+        if (this.responding) this.updateResponse();
+    }).bind(this));
+    this.socket.on('fiO2', (function() {
+        if (this.responding) this.updateResponse();
+    }).bind(this));
 }
 InterventionResponse.prototype.monitor = function() {
     this.interventionBtn.onclick = InterventionResponseBehavior.clickIntervention.bind(InterventionResponseBehavior, this);
+    this.immediateInterventionBtn.onclick = InterventionResponseBehavior.clickImmediateIntervention.bind(InterventionResponseBehavior, this);
 }
 InterventionResponse.prototype.countDownInterventionResponse = function() {
     if (this.timeUntilResponse > 0) {
@@ -178,17 +200,5 @@ InterventionResponse.prototype.countDownInterventionResponse = function() {
     InterventionResponseBehavior.interventionResponseTimeout(this);
 }
 InterventionResponse.prototype.onDelivered = function() {}
-InterventionResponse.prototype.getResponseTarget = function() {}
-InterventionResponse.prototype.onResponding = function() {
-    console.log('Scenario: Now responding to FiO2.');
-    this.updateResponseTarget();
-    socket.on('tick', this.updateResponseTarget.bind(this));
-    socket.on('fiO2', this.updateResponseTarget.bind(this));
-}
-InterventionResponse.prototype.updateResponseTarget = function() {
-    var responseTarget = this.getResponseTarget();
-    if (!responseTarget) return;
-    responseTarget = Math.round(100 * responseTarget);
-    spO2AutoAdjuster.autoAdjustTargetValue.update(responseTarget, true);
-    AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
-}
+InterventionResponse.prototype.onResponding = function() {}
+InterventionResponse.prototype.updateResponse = function() {}

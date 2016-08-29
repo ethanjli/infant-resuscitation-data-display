@@ -479,7 +479,7 @@ SocketConnection.prototype.multipleConnected = function(numControlPanels) {
         this.connectionStatusElem.className = 'label label-success';
         return;
     }
-    this.connectionStatusElem.innerHTML = numControlPanels + ' control pannels connected to server';
+    this.connectionStatusElem.innerHTML = numControlPanels + ' control panels connected to server';
     this.connectionStatusElem.className = 'label label-info';
 }
 SocketConnection.prototype.displaysConnected = function(numDisplays) {
