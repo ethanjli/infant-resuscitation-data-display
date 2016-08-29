@@ -236,31 +236,12 @@ interventionResponse.onDelivered = function() {
     spO2.update(50, true);
     hr.update(140, true);
 }
-interventionResponse.onResponding = function() {
-    console.log('Scenario: Now responding to FiO2.');
-    this.updateResponseTarget();
-    socket.on('tick', (function(time) {
-        this.time = time;
-        this.updateResponseTarget();
-    }).bind(this));
-    socket.on('fiO2', (function(fiO2Value) {
-        this.fiO2 = fiO2Value;
-        this.updateResponseTarget();
-    }).bind(this));
-}
 interventionResponse.getResponseTarget = function() {
-    if (this.fiO2 <= 0.21) return 0.5;
-    else if (0.21 < this.fiO2 && this.fiO2 <= 0.25) return 0.55;
-    else if (0.25 < this.fiO2 && this.fiO2 <= 0.34) return getTargetRange(this.time).mid;
-    else return 0.05 + getTargetRange(this.time).mid;
-}
-interventionResponse.updateResponseTarget = function() {
-    var responseTarget = this.getResponseTarget();
-    if (!responseTarget) return;
-    responseTarget = Math.round(100 * responseTarget);
-    console.log('Target is now', responseTarget);
-    spO2AutoAdjuster.autoAdjustTargetValue.update(responseTarget, true);
-    AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
+    var fiO2Value = fiO2.rawValue * 0.01;
+    if (fiO2Value <= 0.21) return 0.5;
+    else if (0.21 < fiO2Value && fiO2Value <= 0.25) return 0.55;
+    else if (0.25 < fiO2Value && fiO2Value <= 0.34) return getTargetRange(apgarTime.rawValue).mid;
+    else return 0.05 + getTargetRange(apgarTime.rawValue).mid;
 }
 InterventionResponseBehavior.reset(interventionResponse);
 

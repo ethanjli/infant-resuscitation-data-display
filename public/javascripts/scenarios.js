@@ -177,6 +177,18 @@ InterventionResponse.prototype.countDownInterventionResponse = function() {
     }
     InterventionResponseBehavior.interventionResponseTimeout(this);
 }
-InterventionResponse.prototype.onDelivered = function() {};
-InterventionResponse.prototype.onResponding = function() {};
-
+InterventionResponse.prototype.onDelivered = function() {}
+InterventionResponse.prototype.getResponseTarget = function() {}
+InterventionResponse.prototype.onResponding = function() {
+    console.log('Scenario: Now responding to FiO2.');
+    this.updateResponseTarget();
+    socket.on('tick', this.updateResponseTarget.bind(this));
+    socket.on('fiO2', this.updateResponseTarget.bind(this));
+}
+InterventionResponse.prototype.updateResponseTarget = function() {
+    var responseTarget = this.getResponseTarget();
+    if (!responseTarget) return;
+    responseTarget = Math.round(100 * responseTarget);
+    spO2AutoAdjuster.autoAdjustTargetValue.update(responseTarget, true);
+    AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
+}

@@ -27,6 +27,7 @@ function AdjustableValue(options) {
 }
 AdjustableValue.prototype.update = function(newValue, emit) {
     value = clamp(newValue, this.min, this.max);
+    this.rawValue = newValue;
     this.inputElem.value = newValue;
     this.afterUpdate();
     if (emit) {

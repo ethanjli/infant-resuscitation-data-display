@@ -44,6 +44,7 @@ ReadableValue.prototype.update = function(newValue) {
         return;
     }
     newValue = clamp(newValue, this.min, this.max);
+    this.rawValue = newValue;
     if (this.units === 'time') {
         newValue = toDateString(newValue);
     } else if (this.units === 'bpm') {
