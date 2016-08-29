@@ -346,7 +346,6 @@ Simulation.prototype.listen = function() {
     }).bind(this));
     this.socket.on('disconnect', SimulationBehavior.disconnectSocket.bind(SimulationBehavior, this));
     this.socket.on('tick', (function(time) {
-        console.log(time, this.runningToPause);
         if (this.runningToPause && time >= this.initializationTime) {
             SimulationBehavior.runningToPauseTimeout(this);
         }
