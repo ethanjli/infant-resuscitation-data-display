@@ -10,6 +10,7 @@ function WaveformDisplay(options) {
     this.ctx.strokeStyle = options.color;
     this.ctx.lineWidth = options.thickness;
     this.scanSpeed = options.scanSpeed;
+    // 75 samples corresponds to 47 bpm at 60 fps, so we draw 4 samples per frame
     this.samplesPerFrame = 4;
     this.connected = false;
     this.signalLength = options.data.length;
@@ -63,13 +64,10 @@ WaveformDisplay.prototype.drawScanBar = function() {
     this.ctx.clearRect(this.x, 0, this.scanBarWidth, this.canvas.height);
 }
 WaveformDisplay.prototype.draw = function() {
-    setTimeout((function() {
-        requestAnimationFrame(this.draw.bind(this));
-        // 75 samples corresponds to 47 bpm at 60 fps, so we draw 4 samples per frame
+    requestAnimationFrame(this.draw.bind(this)); // we assume this runs at 60 fps
 
-        if (this.connected) this.scanFrame();
-        else this.clearCanvas();
-    }).bind(this), 1000 / 60);
+    if (this.connected) this.scanFrame();
+    else this.clearCanvas();
 }
 WaveformDisplay.prototype.connect = function() {
     this.connected = true;
