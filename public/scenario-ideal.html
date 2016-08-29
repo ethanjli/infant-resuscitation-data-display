@@ -86,6 +86,12 @@
                             <form class="form-horizontal">
                                 <div class="form-group">
                                     <div class="row">
+                                        <label>Vital Signs</label>
+                                    </div>
+                                    <button type="button" id="btn-initialize-vital-signs" class="btn btn-default">Set to Initial Values</button>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
                                         <label>Sensor Connection</label>
                                     </div>
                                     <button type="button" id="btn-sensors" class="btn btn-default"></button>
@@ -271,11 +277,6 @@ var ppvResponse = new InterventionResponse({
     stopRespondingText: 'Stop Responding to FiO2',
     socket: socket
 });
-ppvResponse.onDelivered = function() {
-    spO2.update(50, true);
-    hr.update(140, true);
-    rr.update(0);
-}
 ppvResponse.onResponding = function() {
     console.log('Scenario: Now responding to FiO2.');
     this.updateResponse();
@@ -310,6 +311,12 @@ document.getElementById('btn-minimal-display').onclick = function() {
 document.getElementById('btn-full-display').onclick = function() {
     console.log('Socket: Redirecting clients to the full display.');
     socket.emit('redirect', '/display');
+}
+document.getElementById('btn-initialize-vital-signs').onclick = function() {
+    console.log('Scenario: Resetting vital signs to initial values.');
+    spO2.update(50, true);
+    hr.update(140, true);
+    rr.update(0);
 }
 
 $(function() {
