@@ -33,6 +33,12 @@ app.get('/minimal-display', function(req, res) {
 app.get('/control', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'control-panel.html'))
 });
+app.get('/scenario-ideal', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public', 'scenario-ideal.html'))
+});
+app.get('/scenario-extreme', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public', 'scenario-extreme.html'))
+});
 app.get('/csv', function(req, res) {
   var samples = sensors.sampleAllPrevious();
   if (samples === null || streaming.getStartTime() === null) {

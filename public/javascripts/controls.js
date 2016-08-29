@@ -1,6 +1,14 @@
+function PlaceholderElem() {
+    this.value = 0;
+}
+PlaceholderElem.prototype.setAttribute = function() {}
+PlaceholderElem.prototype.removeAttribute = function() {}
+
 function AdjustableValue(options) {
-    this.inputElem = document.getElementById(options.inputElem);
-    this.unitsElem = document.getElementById(options.unitsElem);
+    if (options.inputElem) this.inputElem = document.getElementById(options.inputElem);
+    else this.inputElem = new PlaceholderElem();
+    if (options.unitsElem) this.unitsElem = document.getElementById(options.unitsElem);
+    else this.unitsElem = new PlaceholderElem();
     this.units = options.units;
     this.min = options.min;
     this.max = options.max;
@@ -70,7 +78,8 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
                 client.autoAdjustBtn.innerHTML = 'Start Adjusting';
             },
             reachedTarget: 'atTarget',
-            clickTarget: 'adjusting'
+            clickTarget: 'adjusting',
+            adjust: 'adjusting'
         },
         adjusting: {
             _onEnter: function(client) {
@@ -101,6 +110,9 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
     },
     clickTarget: function(client) {
         this.handle(client, 'clickTarget');
+    },
+    adjust: function(client) {
+        this.handle(client, 'adjust');
     }
 });
 
@@ -117,7 +129,8 @@ function AutoAdjuster(options) {
         placeholder: this.adjustableValue.placeholder,
         socket: this.adjustableValue.socket
     });
-    this.autoAdjustBtn = document.getElementById(options.autoAdjustBtn);
+    if (options.autoAdjustBtn) this.autoAdjustBtn = document.getElementById(options.autoAdjustBtn);
+    else this.autoAdjustBtn = new PlaceholderElem();
     this.incrementStep = options.incrementStep;
     this.timeStep = options.timeStep;
     this.autoAdjustTimer = null;
@@ -258,13 +271,9 @@ Simulation.prototype.listen = function() {
     }).bind(this));
     this.socket.on('simulation-state-info', (function(data) {
         console.log('Sockets: Simulation state is: ' + data);
-        if (data === 'ready') {
-            SimulationBehavior.reset(this);
-        } else if (data === 'running') {
-            SimulationBehavior.start(this);
-        } else if (data === 'stopped') {
-            SimulationBehavior.pause(this);
-        }
+        if (data === 'ready') SimulationBehavior.reset(this);
+        else if (data === 'running') SimulationBehavior.start(this);
+        else if (data === 'stopped') SimulationBehavior.pause(this);
     }).bind(this));
     this.socket.on('disconnect', SimulationBehavior.disconnectSocket.bind(SimulationBehavior, this));
 }
@@ -478,7 +487,6 @@ function NRPTargets(options) {
 }
 NRPTargets.prototype.update = function(time) {
     var targetRange = getTargetRange(time);
-    console.log(time, targetRange);
     this.minValue.update(targetRange.lower);
     this.maxValue.update(targetRange.upper);
     this.midValue.update(targetRange.mid);

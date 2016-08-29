@@ -1,0 +1,296 @@
+<!doctype html>
+
+<head>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/machina.js/2.0.0/machina.min.js"></script>
+<script src="/javascripts/everpolate.browserified.min.js"></script>
+
+<script src="/javascripts/common.js"></script>
+<script src="/javascripts/controls.js"></script>
+<script src="/javascripts/scenarios.js"></script>
+
+<style>
+.vertical-center {
+    min-height: 90%;
+    min-height: 90vh;
+
+    display: flex;
+    align-items: center;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+    <div class="row vertical-center text-center">
+        <div class="col-md-12 text-center">
+            <h1>Scenario 1 and 4</h1>
+            <div class="row">
+                <span id="status-connection" class="label label-danger">Not connected to server</span> <span id="status-displays" class="label label-warning">No displays connected to server</span> <span id="status-hardware" class="label label-warning">No hardware interfaces connected to server</span>
+                <hr>
+                <div class="col-md-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><h3 class="panel-title">Simulation</h3></div>
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-6 control-label">Apgar time</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="apgar-time"></p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Simulation State</label>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" id="btn-startreset-simulation" class="btn btn-default"></button>
+                                        <button type="button" id="btn-pauseresume-simulation" class="btn btn-default"></button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Display</label>
+                                    </div>
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" id="btn-minimal-display" class="btn btn-default">Use Minimal Display</button>
+                                        <button type="button" id="btn-full-display" class="btn btn-default">Use Full Display</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <hr>
+                            <form action="/csv" method="get" target="_blank">
+                                <div class="row">
+                                    <label>Data Export</label>
+                                </div>
+                                <input type="submit" id="btn-download-csv" class="btn btn-default" value="Download Simulation Record">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><h3 class="panel-title">Vitals</h3></div>
+                        <div class="panel-body form-horizontal">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Sensor Connection</label>
+                                    </div>
+                                    <button type="button" id="btn-sensors" class="btn btn-default"></button>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>Intervention</label>
+                                    </div>
+                                    <button type="button" id="btn-intervention" class="btn btn-default"></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><h3 class="panel-title">Air Supply</h3></div>
+                        <div class="panel-body form-horizontal">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
+                                    <div class="input-group col-sm-5">
+                                        <input type="number" id="input-fio2" class="form-control">
+                                        <div id="input-fio2-units" class="input-group-addon"></div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label>NRP Targets</label>
+                                    </div>
+                                    <label class="col-sm-6 control-label">Min</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="nrp-target-min"></p>
+                                    </div>
+                                    <label class="col-sm-6 control-label">Mid</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="nrp-target-mid"></p>
+                                    </div>
+                                    <label class="col-sm-6 control-label">Max</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="nrp-target-max"></p>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var socket = io.connect(window.location.host);
+
+var socketConnection = new SocketConnection({
+    connectionStatusElem: 'status-connection',
+    displaysStatusElem: 'status-displays',
+    hardwareStatusElem: 'status-hardware',
+    socket: socket
+});
+
+var simulation = new Simulation({
+    socket: socket,
+    startResetBtn: 'btn-startreset-simulation',
+    pauseResumeBtn: 'btn-pauseresume-simulation',
+    downloadBtn: 'btn-download-csv'
+});
+
+var sensorConnection = new SensorConnection({
+    socket: socket,
+    delayedSensorConnectionBtn: 'btn-sensors',
+    delay: 15
+});
+
+var apgarTime = new ReadableValue({
+    elem: 'apgar-time',
+    units: 'time',
+    min: 0,
+    missingString: '???',
+    socket: socket,
+    messageName: 'tick'
+});
+
+var spO2 = new AdjustableValue({
+    units: '%',
+    min: 0,
+    max: 100,
+    step: 1,
+    placeholder: 0,
+    socket: socket,
+    messageName: 'spO2',
+    updateMessage: 'Updating SpO2 level to '
+});
+var spO2AutoAdjuster = new AutoAdjuster({
+    adjustableValue: spO2,
+    incrementStep: 1,
+    timeStep: 2
+});
+
+var hr = new AdjustableValue({
+    units: ' bpm',
+    min: 140,
+    max: 140,
+    step: 1,
+    placeholder: 140,
+    socket: socket,
+    messageName: 'hr',
+    updateMessage: 'Updating HR to '
+});
+var hrAutoAdjuster = new AutoAdjuster({
+    adjustableValue: hr,
+    incrementStep: 5,
+    timeStep: 2
+});
+
+var fiO2 = new AdjustableValue({
+    inputElem: 'input-fio2',
+    unitsElem: 'input-fio2-units',
+    units: '%',
+    min: 21,
+    max: 100,
+    step: 1,
+    placeholder: 21,
+    socket: socket,
+    messageName: 'fiO2',
+    updateMessage: 'Updating FiO2 level to '
+});
+
+var nrpTargets = new NRPTargets({
+    minElem: 'nrp-target-min',
+    maxElem: 'nrp-target-max',
+    midElem: 'nrp-target-mid',
+    socket: socket
+});
+
+var interventionResponse = new InterventionResponse({
+    interventionBtn: 'btn-intervention',
+    delay: 15,
+    startInterventionText: 'Begin PPV',
+    cancelInterventionText: 'Cancel PPV',
+    respondingText: 'Responding to FiO2',
+    socket: socket
+});
+interventionResponse.onDelivered = function() {
+    console.log('Scenario: Infant delivered.')
+    spO2.update(50, true);
+    hr.update(140, true);
+}
+interventionResponse.onResponding = function() {
+    console.log('Scenario: Now responding to FiO2.');
+    this.updateResponseTarget();
+    socket.on('tick', (function(time) {
+        this.time = time;
+        this.updateResponseTarget();
+    }).bind(this));
+    socket.on('fiO2', (function(fiO2Value) {
+        this.fiO2 = fiO2Value;
+        this.updateResponseTarget();
+    }).bind(this));
+}
+interventionResponse.getResponseTarget = function() {
+    if (this.fiO2 <= 0.21) return 0.5;
+    else if (0.21 < this.fiO2 && this.fiO2 <= 0.25) return 0.55;
+    else if (0.25 < this.fiO2 && this.fiO2 <= 0.34) return getTargetRange(this.time).mid;
+    else return 0.05 + getTargetRange(this.time).mid;
+}
+interventionResponse.updateResponseTarget = function() {
+    var responseTarget = this.getResponseTarget();
+    if (!responseTarget) return;
+    responseTarget = Math.round(100 * responseTarget);
+    console.log('Target is now', responseTarget);
+    spO2AutoAdjuster.autoAdjustTargetValue.update(responseTarget, true);
+    AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
+}
+InterventionResponseBehavior.reset(interventionResponse);
+
+socket.on('hardware-connection-info', function(data) {
+    if (data > 0) fiO2.setReadOnly();
+    else fiO2.setWritable();
+});
+
+document.getElementById('btn-minimal-display').onclick = function() {
+    console.log('Socket: Redirecting clients to the minimal display.');
+    socket.emit('redirect', '/minimal-display');
+}
+document.getElementById('btn-full-display').onclick = function() {
+    console.log('Socket: Redirecting clients to the full display.');
+    socket.emit('redirect', '/display');
+}
+
+$(function() {
+    $(':input[type="number"]').on('mousewheel', function(event) {
+        event.target.value = parseInt(event.target.value) + event.deltaY;
+        if (event.target.min !== undefined) {
+            event.target.value = Math.max(event.target.min, event.target.value);
+        }
+        if (event.target.max !== undefined) {
+            event.target.value = Math.min(event.target.max, event.target.value);
+        }
+        event.target.onchange();
+    });
+});
+
+</script>
+
+</body>
