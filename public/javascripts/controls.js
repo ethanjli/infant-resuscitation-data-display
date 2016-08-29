@@ -199,8 +199,8 @@ var SimulationBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.startResetBtn.innerHTML = 'Start';
                 client.startResetBtn.disabled = '';
-                client.pauseResumeBtn.innerHTML = 'Pause';
-                client.pauseResumeBtn.disabled = 'disabled';
+                client.pauseResumeBtn.innerHTML = 'Start at 00:10';
+                client.pauseResumeBtn.disabled = '';
                 client.downloadBtn.disabled = 'disabled';
             },
             _onExit: function(client) {
@@ -213,6 +213,34 @@ var SimulationBehavior = new machina.BehavioralFsm({
             clickStartReset: function(client) {
                 this.transition(client, 'waitingForResponse');
                 client.socket.emit('start');
+            },
+            clickPauseResume: function(client) {
+                this.transition(client, 'runningToPause');
+                client.socket.emit('start');
+            },
+            disconnectSocket: 'waitingForResponse'
+        },
+        runningToPause: {
+            _onEnter: function(client) {
+                client.startResetBtn.innerHTML = 'Running until 00:10';
+                client.startResetBtn.disabled = 'disabled';
+                client.pauseResumeBtn.innerHTML = 'Pausing at 00:10';
+                client.pauseResumeBtn.disabled = 'disabled';
+                client.downloadBtn.disabled = 'disabled';
+                client.runningToPause = true;
+                console.log(client.runningToPause);
+            },
+            _onExit: function(client) {
+                client.startResetBtn.innerHTML = 'Reset';
+                client.startResetBtn.disabled = '';
+                client.pauseResumeBtn.disabled = '';
+                client.downloadBtn.disabled = '';
+                client.runningToPause = false;
+            },
+            pause: 'paused',
+            runningToPauseTimeout: function(client) {
+                this.transition(client, 'waitingForResponse');
+                client.socket.emit('stop');
             },
             disconnectSocket: 'waitingForResponse'
         },
@@ -279,6 +307,9 @@ var SimulationBehavior = new machina.BehavioralFsm({
     clickPauseResume: function(client) {
         this.handle(client, 'clickPauseResume');
     },
+    runningToPauseTimeout: function(client) {
+        this.handle(client, 'runningToPauseTimeout');
+    },
     disconnectSocket: function(client) {
         this.handle(client, 'disconnectSocket');
     }
@@ -288,6 +319,8 @@ function Simulation(options) {
     this.startResetBtn = document.getElementById(options.startResetBtn);
     this.pauseResumeBtn = document.getElementById(options.pauseResumeBtn);
     this.downloadBtn = document.getElementById(options.downloadBtn);
+    this.initializationTime = options.initializationTime;
+    this.runningToPause = false;
 
     this.listen();
     this.monitor();
@@ -312,6 +345,12 @@ Simulation.prototype.listen = function() {
         else if (data === 'stopped') SimulationBehavior.pause(this);
     }).bind(this));
     this.socket.on('disconnect', SimulationBehavior.disconnectSocket.bind(SimulationBehavior, this));
+    this.socket.on('tick', (function(time) {
+        console.log(time, this.runningToPause);
+        if (this.runningToPause && time >= this.initializationTime) {
+            SimulationBehavior.runningToPauseTimeout(this);
+        }
+    }).bind(this));
 }
 Simulation.prototype.monitor = function() {
     this.startResetBtn.onclick = SimulationBehavior.clickStartReset.bind(SimulationBehavior, this);
