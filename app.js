@@ -27,6 +27,9 @@ app.get('/', function(req, res) {
 app.get('/display', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'display-panel.html'))
 });
+app.get('/short-display', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public', 'short-display-panel.html'))
+});
 app.get('/minimal-display', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'minimal-display-panel.html'))
 });
