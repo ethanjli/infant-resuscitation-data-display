@@ -91,7 +91,19 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
                 clearTimeout(client.autoAdjustTimer);
             },
             reachedTarget: 'atTarget',
-            clickTarget: 'ready'
+            clickTarget: 'ready',
+            pause: 'paused'
+        },
+        paused: {
+            _onEnter: function(client) {
+                client.autoAdjustBtn.innerHTML = 'Paused';
+                client.autoAdjustBtn.disabled = 'disabled';
+            },
+            _onExit: function(client) {
+                client.autoAdjustBtn.disabled = '';
+            },
+            resume: 'adjusting',
+            reset: 'ready'
         },
         atTarget: {
             _onEnter: function(client) {
@@ -113,6 +125,15 @@ var AutoAdjusterBehavior = new machina.BehavioralFsm({
     },
     adjust: function(client) {
         this.handle(client, 'adjust');
+    },
+    reset: function(client) {
+        this.handle(client, 'reset');
+    },
+    pause: function(client) {
+        this.handle(client, 'pause');
+    },
+    resume: function(client) {
+        this.handle(client, 'resume');
     }
 });
 
@@ -134,7 +155,19 @@ function AutoAdjuster(options) {
     this.incrementStep = options.incrementStep;
     this.timeStep = options.timeStep;
     this.autoAdjustTimer = null;
+    this.socket = this.adjustableValue.socket;
+    this.listen();
     this.monitor();
+}
+AutoAdjuster.prototype.listen = function() {
+    this.socket.on('reset', AutoAdjusterBehavior.reset.bind(AutoAdjusterBehavior, this));
+    this.socket.on('stop', AutoAdjusterBehavior.pause.bind(AutoAdjusterBehavior, this));
+    this.socket.on('start', AutoAdjusterBehavior.resume.bind(AutoAdjusterBehavior, this));
+    this.socket.on('simulation-state-info', (function(data) {
+        if (data === 'ready') AutoAdjusterBehavior.reset(this);
+        else if (data === 'running') AutoAdjusterBehavior.resume(this);
+        else if (data === 'stopped') AutoAdjusterBehavior.pause(this);
+    }).bind(this));
 }
 AutoAdjuster.prototype.monitor = function() {
     this.adjustableValue.afterUpdate = AutoAdjusterBehavior.updateValue.bind(AutoAdjusterBehavior, this);
