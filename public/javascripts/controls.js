@@ -9,6 +9,7 @@ function AdjustableValue(options) {
     else this.inputElem = new PlaceholderElem();
     if (options.unitsElem) this.unitsElem = document.getElementById(options.unitsElem);
     else this.unitsElem = new PlaceholderElem();
+    if (options.elem) this.elem = document.getElementById(options.elem);
     this.units = options.units;
     this.min = options.min;
     this.max = options.max;
@@ -29,6 +30,7 @@ AdjustableValue.prototype.update = function(newValue, emit) {
     value = clamp(newValue, this.min, this.max);
     this.rawValue = newValue;
     this.inputElem.value = newValue;
+    if (this.elem) this.elem.innerHTML = newValue + this.units;
     this.afterUpdate();
     if (emit) {
         this.inputElem.onchange();

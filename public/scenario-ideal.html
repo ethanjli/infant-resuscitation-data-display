@@ -81,7 +81,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><h3 class="panel-title">Vitals</h3></div>
+                        <div class="panel-heading"><h3 class="panel-title">Scenario Controls</h3></div>
                         <div class="panel-body form-horizontal">
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -96,20 +96,38 @@
                                     </div>
                                     <button type="button" id="btn-intervention" class="btn btn-default"></button>
                                 </div>
+                                <hr>
+                                <div class="form-group">
+                                    <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
+                                    <div class="input-group col-sm-5">
+                                        <input type="number" id="input-fio2" class="form-control">
+                                        <div id="input-fio2-units" class="input-group-addon"></div>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><h3 class="panel-title">Air Supply</h3></div>
+                        <div class="panel-heading"><h3 class="panel-title">Information</h3></div>
                         <div class="panel-body form-horizontal">
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <label for="input-fio2" class="col-sm-6 control-label">FiO<sub>2</sub></label>
-                                    <div class="input-group col-sm-5">
-                                        <input type="number" id="input-fio2" class="form-control">
-                                        <div id="input-fio2-units" class="input-group-addon"></div>
+                                    <div class="row">
+                                        <label>Readings</label>
+                                    </div>
+                                    <label class="col-sm-6 control-label">SpO<small>2</small></label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="spo2-display"></p>
+                                    </div>
+                                    <label class="col-sm-6 control-label">HR</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="hr-display"></p>
+                                    </div>
+                                    <label class="col-sm-6 control-label">RR</label>
+                                    <div class="col-sm-6">
+                                        <p class="form-control-static" id="rr-display"></p>
                                     </div>
                                 </div>
                                 <hr>
@@ -172,6 +190,7 @@ var apgarTime = new ReadableValue({
 });
 
 var spO2 = new AdjustableValue({
+    elem: 'spo2-display',
     units: '%',
     min: 0,
     max: 100,
@@ -188,6 +207,7 @@ var spO2AutoAdjuster = new AutoAdjuster({
 });
 
 var hr = new AdjustableValue({
+    elem: 'hr-display',
     units: ' bpm',
     min: 140,
     max: 140,
