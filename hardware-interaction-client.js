@@ -5,7 +5,7 @@ var socket = require('socket.io-client')('http://localhost:5000')
 
 socket.on('connect', function() {
   console.log('Sockets: Connected to server.');
-  socket.emit('connected', {client: 'hardware-interaction-client'});
+  socket.emit('connected', {client: 'hardware-interaction-client', clientType: 'fio2-knob-controller'});
 });
 socket.on('disconnect', function() {
   console.log('Sockets: Disconnected from server.');

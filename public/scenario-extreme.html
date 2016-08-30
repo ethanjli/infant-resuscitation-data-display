@@ -173,6 +173,7 @@
 var socket = io.connect(window.location.host);
 
 var socketConnection = new SocketConnection({
+    clientType: 'extreme-scenario-control-panel',
     connectionStatusElem: 'status-connection',
     displaysStatusElem: 'status-displays',
     hardwareStatusElem: 'status-hardware',

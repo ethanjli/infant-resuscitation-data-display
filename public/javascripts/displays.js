@@ -120,6 +120,7 @@ var ppgData = [
 ];
 
 function SocketConnection(options) {
+    this.clientType = options.clientType;
     this.connectionStatusElem = document.getElementById(options.connectionStatusElem);
     this.socket = options.socket;
     this.listen();
@@ -133,7 +134,7 @@ SocketConnection.prototype.connected = function() {
     this.connectionStatusElem.className = 'label label-default';
     this.connectionStatusElem.style.visibility = 'hidden';
     console.log('Sockets: Connected to server.');
-    this.socket.emit('connected', {client: 'display-panel'});
+    this.socket.emit('connected', {client: 'display-panel', clientType: this.clientType});
 }
 SocketConnection.prototype.disconnected = function() {
     this.connectionStatusElem.innerHTML = 'Not connected to simulation control room!';

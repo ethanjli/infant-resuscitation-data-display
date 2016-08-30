@@ -483,6 +483,7 @@ SensorConnection.prototype.countDownDelayedConnection = function() {
 }
 
 function SocketConnection(options) {
+    this.clientType = options.clientType;
     this.connectionStatusElem = document.getElementById(options.connectionStatusElem);
     this.displaysStatusElem = document.getElementById(options.displaysStatusElem);
     this.hardwareStatusElem = document.getElementById(options.hardwareStatusElem);
@@ -499,7 +500,7 @@ SocketConnection.prototype.listen = function() {
 SocketConnection.prototype.connected = function() {
     this.multipleConnected(1);
     console.log('Sockets: Connected to server.');
-    this.socket.emit('connected', {client: 'control-panel'});
+    this.socket.emit('connected', {client: 'control-panel', clientType: this.clientType});
 }
 SocketConnection.prototype.disconnected = function() {
     this.connectionStatusElem.innerHTML = 'Not connected to server';

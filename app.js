@@ -27,8 +27,8 @@ app.get('/', function(req, res) {
 app.get('/display', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'display-panel.html'))
 });
-app.get('/short-display', function(req, res) {
-  res.sendFile(path.join(__dirname, 'public', 'short-display-panel.html'))
+app.get('/control-display', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public', 'control-display-panel.html'))
 });
 app.get('/minimal-display', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'minimal-display-panel.html'))
@@ -49,6 +49,7 @@ app.get('/json', function(req, res) {
     return;
   }
   var startTime = streaming.getStartTime().format('YYYYMMDD-HHmmss');
+  console.log(streaming.getClients());
   res.set({
     'Content-Disposition': 'attachment; filename=tracing_' + startTime + '.json',
     'Content-Type': 'application/json'
@@ -63,7 +64,7 @@ app.get('/json', function(req, res) {
     },
     samples: samples,
     events: [],
-    clients: []
+    clients: streaming.getClients()
   }, null, '  ');
   res.send(json);
 });
