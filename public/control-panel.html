@@ -79,12 +79,13 @@
                                 </div>
                             </form>
                             <hr>
-                            <form action="/csv" method="get" target="_blank">
-                                <div class="row">
-                                    <label>Data Export</label>
-                                </div>
-                                <input type="submit" id="btn-download-csv" class="btn btn-default" value="Download Simulation Record">
-                            </form>
+                            <div class="row">
+                                <label>Data Export</label>
+                            </div>
+                            <div class="btn-group-vertical" role="group">
+                                <a class="btn btn-default" id="btn-download-csv" href="/csv" target="_blank">Download Record as CSV</a>
+                                <a class="btn btn-default" id="btn-download-json" href="/json" target="_blank">Download Record with Metadata</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -199,7 +200,6 @@ var simulation = new Simulation({
     socket: socket,
     startResetBtn: 'btn-startreset-simulation',
     pauseResumeBtn: 'btn-pauseresume-simulation',
-    downloadBtn: 'btn-download-csv'
 });
 
 var sensorConnection = new SensorConnection({

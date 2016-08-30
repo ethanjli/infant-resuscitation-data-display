@@ -201,12 +201,10 @@ var SimulationBehavior = new machina.BehavioralFsm({
                 client.startResetBtn.disabled = '';
                 client.pauseResumeBtn.innerHTML = 'Start at 00:10';
                 client.pauseResumeBtn.disabled = '';
-                client.downloadBtn.disabled = 'disabled';
             },
             _onExit: function(client) {
                 client.startResetBtn.innerHTML = 'Reset';
                 client.pauseResumeBtn.disabled = '';
-                client.downloadBtn.disabled = '';
             },
             start: 'running',
             pause: 'paused',
@@ -226,14 +224,12 @@ var SimulationBehavior = new machina.BehavioralFsm({
                 client.startResetBtn.disabled = 'disabled';
                 client.pauseResumeBtn.innerHTML = 'Pausing at 00:10';
                 client.pauseResumeBtn.disabled = 'disabled';
-                client.downloadBtn.disabled = 'disabled';
                 client.runningToPause = true;
             },
             _onExit: function(client) {
                 client.startResetBtn.innerHTML = 'Reset';
                 client.startResetBtn.disabled = '';
                 client.pauseResumeBtn.disabled = '';
-                client.downloadBtn.disabled = '';
                 client.runningToPause = false;
             },
             pause: 'paused',
@@ -282,12 +278,10 @@ var SimulationBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.startResetBtn.disabled = 'disabled';
                 client.pauseResumeBtn.disabled = 'disabled';
-                client.downloadBtn.disabled = 'disabled';
             },
             _onExit: function(client) {
                 client.startResetBtn.disabled = '';
                 client.pauseResumeBtn.disabled = '';
-                client.downloadBtn.disabled = '';
             },
             reset: 'ready',
             start: 'running',
@@ -320,7 +314,6 @@ function Simulation(options) {
     this.socket = options.socket;
     this.startResetBtn = document.getElementById(options.startResetBtn);
     this.pauseResumeBtn = document.getElementById(options.pauseResumeBtn);
-    this.downloadBtn = document.getElementById(options.downloadBtn);
     this.initializationTime = options.initializationTime;
     this.runningToPause = false;
 

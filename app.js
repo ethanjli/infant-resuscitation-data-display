@@ -42,24 +42,49 @@ app.get('/scenario-ideal', function(req, res) {
 app.get('/scenario-extreme', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'scenario-extreme.html'))
 });
+app.get('/json', function(req, res) {
+  var samples = sensors.sampleAllPrevious();
+  if (samples === null || streaming.getStartTime() === null) {
+    res.sendStatus(204);
+    return;
+  }
+  var startTime = streaming.getStartTime().format('YYYYMMDD-HHmmss');
+  res.set({
+    'Content-Disposition': 'attachment; filename=tracing_' + startTime + '.json',
+    'Content-Type': 'application/json'
+  });
+  var json = JSON.stringify({
+    startTime: {
+      iso: streaming.getStartTime(),
+      local: streaming.getStartTime().toLocaleString('en-US', {
+        timeZone: 'PST',
+        timeZoneName: 'short'
+      })
+    },
+    samples: samples,
+    events: [],
+    clients: []
+  }, null, '  ');
+  res.send(json);
+});
 app.get('/csv', function(req, res) {
   var samples = sensors.sampleAllPrevious();
   if (samples === null || streaming.getStartTime() === null) {
     res.sendStatus(204);
-  } else {
-    var csv = _.zip(samples.time, samples.spO2, samples.fiO2, samples.hr);
-    csv.unshift(['Time', 'SpO2', 'FiO2', 'HR']);
-    csv = csv.map(function(row) {
-      return row.join(', ');
-    }).join('\n');
-    var startTime = streaming.getStartTime().format('YYYYMMDD-HHmmss');
-    res.set({
-      'Content-Disposition': 'attachment; filename=tracing_' + startTime + '.csv',
-      'Content-Type': 'text/csv'
-    });
-    res.send(csv);
+    return;
   }
-})
+  var csv = _.zip(samples.time, samples.spO2, samples.fiO2, samples.hr);
+  csv.unshift(['Time', 'SpO2', 'FiO2', 'HR']);
+  csv = csv.map(function(row) {
+    return row.join(', ');
+  }).join('\n');
+  var startTime = streaming.getStartTime().format('YYYYMMDD-HHmmss');
+  res.set({
+    'Content-Disposition': 'attachment; filename=tracing_' + startTime + '.csv',
+    'Content-Type': 'text/csv'
+  });
+  res.send(csv);
+});
 app.get('/favicon.ico', function(req, res) {
   res.sendStatus(200);
 });
