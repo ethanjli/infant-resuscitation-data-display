@@ -278,10 +278,10 @@ socket.on('initialize', function(data) {
     } else {
         console.log('Sockets: Initializing with previous data.');
     }
-    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1], data.hr[data.hr.length - 1]);
+    setCurrentDisplay(data.time[data.time.length - 1], data.spO2Sensor[data.spO2Sensor.length - 1], data.fiO2[data.fiO2.length - 1], data.hrSensor[data.hrSensor.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
-    var spO2Signal = data.spO2;
+    var spO2Signal = data.spO2Sensor;
     spO2Signal.unshift('SpO2');
     var fiO2Signal = data.fiO2;
     fiO2Signal.unshift('FiO2');
@@ -300,7 +300,7 @@ socket.on('initialize', function(data) {
     }
     chart.ygrids([
         {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
-        //{value: data.spO2[data.spO2.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+        //{value: data.spO2Sensor[data.spO2Sensor.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
         //{value: data.fiO2[data.fiO2.length - 1] + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
     ]);
     chart.load({
@@ -312,7 +312,7 @@ socket.on('initialize', function(data) {
     });
 });
 socket.on('update', function(data) {
-    updateDisplay(data.time, data.spO2, data.fiO2, data.hr);
+    updateDisplay(data.time, data.spO2Sensor, data.fiO2, data.hrSensor);
 });
 socket.on('reset', function(data) {
     console.log('Sockets: Resetting data.');
@@ -322,14 +322,14 @@ socket.on('reset', function(data) {
             chart.flow({
                 columns: [
                     ['signalTime', toDateString(data.time)],
-                    ['SpO2', data.spO2],
+                    ['SpO2', data.spO2Sensor],
                     ['FiO2', data.fiO2]
                 ], done: function() {
                     chart.axis.max({x: toDateString(360)});
                     chart.axis.tickFit(false);
                     chart.axis.tickValues([toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]);
                     chart.axis.tickCount(11);
-                    setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
+                    setCurrentDisplay(data.time, data.spO2Sensor, data.fiO2, data.hrSensor);
                     chart.ygrids([
                         {value: 0.87, text: 'SpO2 Target', class: 'spO2-target-label'},
                     ]);

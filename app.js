@@ -49,7 +49,6 @@ app.get('/json', function(req, res) {
     return;
   }
   var startTime = streaming.getStartTime().format('YYYYMMDD-HHmmss');
-  console.log(streaming.getClients());
   res.set({
     'Content-Disposition': 'attachment; filename=tracing_' + startTime + '.json',
     'Content-Type': 'application/json'
@@ -74,8 +73,8 @@ app.get('/csv', function(req, res) {
     res.sendStatus(204);
     return;
   }
-  var csv = _.zip(samples.time, samples.spO2, samples.fiO2, samples.hr);
-  csv.unshift(['Time', 'SpO2', 'FiO2', 'HR']);
+  var csv = _.zip(samples.time, samples.spO2Sensor, samples.fiO2, samples.hrSensor, samples.sensorConnection, samples.spO2, samples.hr, samples.spO2Mean, samples.spO2Noise);
+  csv.unshift(['Time', 'SpO2', 'FiO2', 'HR', 'Sensor Connection', 'Full SpO2', 'Full HR', 'SpO2 Mean', 'SpO2 Noise']);
   csv = csv.map(function(row) {
     return row.join(', ');
   }).join('\n');

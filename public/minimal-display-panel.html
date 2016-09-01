@@ -122,17 +122,17 @@ socket.on('initialize', function(data) {
         return;
     }
     console.log('Sockets: Initializing with previous data.');
-    setCurrentDisplay(data.time[data.time.length - 1], data.spO2[data.spO2.length - 1], data.fiO2[data.fiO2.length - 1], data.hr[data.hr.length - 1]);
+    setCurrentDisplay(data.time[data.time.length - 1], data.spO2Sensor[data.spO2Sensor.length - 1], data.fiO2[data.fiO2.length - 1], data.hrSensor[data.hrSensor.length - 1]);
     var time = data.time.map(toDateString);
     time.unshift('signalTime');
-    var spO2Signal = data.spO2;
+    var spO2Signal = data.spO2Sensor;
     spO2Signal.unshift('SpO2');
 });
 socket.on('update', function(data) {
-    setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
+    setCurrentDisplay(data.time, data.spO2Sensor, data.fiO2, data.hrSensor);
 });
 socket.on('reset', function(data) {
-    setCurrentDisplay(data.time, data.spO2, data.fiO2, data.hr);
+    setCurrentDisplay(data.time, data.spO2Sensor, data.fiO2, data.hrSensor);
     console.log('Sockets: Resetting data.');
 });
 socket.on('redirect', function(data) {
