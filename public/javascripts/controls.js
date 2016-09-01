@@ -234,6 +234,7 @@ var SimulationBehavior = new machina.BehavioralFsm({
             },
             pause: 'paused',
             runningToPauseTimeout: function(client) {
+                client.socket.emit('event', {'name': 'timer-initialized'});
                 this.transition(client, 'waitingForResponse');
                 client.socket.emit('stop');
             },
@@ -380,6 +381,7 @@ var SensorConnectionBehavior = new machina.BehavioralFsm({
                 client.delayedSensorConnectionBtn.disabled = '';
                 client.timeUntilDelayedConnection = client.delay;
                 client.delayedConnectionTimer = setInterval(client.countDownDelayedConnection.bind(client), 1000);
+                client.socket.emit('event', {'name': 'delayed-sensor-connection-timer-started'});
             },
             _onExit: function(client) {
                 if (client.delayedConnectionTimer) clearInterval(client.delayedConnectionTimer);
@@ -393,6 +395,7 @@ var SensorConnectionBehavior = new machina.BehavioralFsm({
             clickDelayedConnect: 'disconnected',
             delayedConnectionTimeout: function(client) {
                 this.transition(client, 'waitingForResponse');
+                client.socket.emit('event', {'name': 'delayed-sensor-connection-timer-completed'});
                 client.socket.emit('sensor-connection', true);
             },
             disconnectSocket: 'waitingForResponse'

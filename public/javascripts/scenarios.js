@@ -14,6 +14,7 @@ var SensorConnectionBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.timeUntilDelayedConnection = client.delay;
                 client.delayedConnectionTimer = setInterval(client.countDownDelayedConnection.bind(client), 1000);
+                client.socket.emit('event', {'name': 'delayed-sensor-connection-timer-started'});
             },
             _onExit: function(client) {
                 if (client.delayedConnectionTimer) clearInterval(client.delayedConnectionTimer);
@@ -23,6 +24,7 @@ var SensorConnectionBehavior = new machina.BehavioralFsm({
             clickDelayedConnect: 'disconnected',
             delayedConnectionTimeout: function(client) {
                 this.transition(client, 'waitingForResponse');
+                client.socket.emit('event', {'name': 'delayed-sensor-connection-timer-completed'});
                 client.socket.emit('sensor-connection', true);
             },
             disconnectSocket: 'waitingForResponse'
@@ -122,6 +124,7 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
             _onEnter: function(client) {
                 client.timeUntilResponse = client.delay;
                 client.interventionResponseTimer = setInterval(client.countDownInterventionResponse.bind(client), 1000);
+                client.socket.emit('event', {'name': 'intervention-started', 'interventionName': client.name});
             },
             _onExit: function(client) {
                 if (client.interventionResponseTimer) clearInterval(client.interventionResponseTimer);
@@ -137,6 +140,7 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
                 client.interventionBtn.disabled = 'disabled';
                 client.immediateInterventionBtn.innerHTML = client.stopRespondingText;
                 client.responding = true;
+                client.socket.emit('event', {'name': 'intervention-response-started', 'interventionName': client.name});
                 client.onResponding();
             },
             _onExit: function(client) {
@@ -160,6 +164,7 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
     }
 });
 function InterventionResponse(options) {
+    this.name = options.name;
     this.interventionBtn = document.getElementById(options.interventionBtn);
     this.immediateInterventionBtn = document.getElementById(options.immediateInterventionBtn);
     this.delay = options.delay;

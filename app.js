@@ -62,7 +62,7 @@ app.get('/json', function(req, res) {
       })
     },
     samples: samples,
-    events: [],
+    events: streaming.getEvents(),
     clients: streaming.getClients()
   }, null, '  ');
   res.send(json);

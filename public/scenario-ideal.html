@@ -104,6 +104,7 @@
                                     <div class="btn-group-vertical" role="group">
                                         <button type="button" id="btn-ppv" class="btn btn-default"></button>
                                         <button type="button" id="btn-ppv-immediate" class="btn btn-default"></button>
+                                        <button type="button" id="btn-intubation" class="btn btn-default">Begin Intubation</button>
                                     </div>
                                 </div>
                                 <hr>
@@ -268,6 +269,7 @@ var nrpTargets = new NRPTargets({
 });
 
 var ppvResponse = new InterventionResponse({
+    name: 'ppv',
     interventionBtn: 'btn-ppv',
     immediateInterventionBtn: 'btn-ppv-immediate',
     delay: 15,
@@ -297,6 +299,9 @@ ppvResponse.getSpO2ResponseTarget = function() {
     else if (0.21 < fiO2Value && fiO2Value <= 0.25) return 0.55;
     else if (0.25 < fiO2Value && fiO2Value <= 0.34) return getTargetRange(apgarTime.rawValue).mid;
     else return 0.05 + getTargetRange(apgarTime.rawValue).upper;
+}
+document.getElementById('btn-intubation').onclick = function() {
+    socket.emit('event', {'name': 'intervention-started', 'interventionName': 'intubation'});
 }
 
 socket.on('hardware-connection-info', function(data) {
