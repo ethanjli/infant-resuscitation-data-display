@@ -105,6 +105,7 @@
                                         <button type="button" id="btn-ppv" class="btn btn-default"></button>
                                         <button type="button" id="btn-ppv-immediate" class="btn btn-default"></button>
                                         <button type="button" id="btn-intubation" class="btn btn-default">Begin Intubation</button>
+                                        <button type="button" id="btn-uvc" class="btn btn-default">Start Placing UVC</button>
                                     </div>
                                 </div>
                                 <hr>
@@ -302,6 +303,9 @@ ppvResponse.getSpO2ResponseTarget = function() {
 }
 document.getElementById('btn-intubation').onclick = function() {
     socket.emit('event', {'name': 'intervention-started', 'interventionName': 'intubation'});
+}
+document.getElementById('btn-uvc').onclick = function() {
+    socket.emit('event', {'name': 'intervention-started', 'interventionName': 'uvc'});
 }
 
 socket.on('hardware-connection-info', function(data) {

@@ -107,6 +107,7 @@
                                         <button type="button" id="btn-cc" class="btn btn-default"></button>
                                         <button type="button" id="btn-cc-immediate" class="btn btn-default"></button>
                                         <button type="button" id="btn-intubation" class="btn btn-default">Begin Intubation</button>
+                                        <button type="button" id="btn-uvc" class="btn btn-default">Start Placing UVC</button>
                                     </div>
                                 </div>
                                 <hr>
@@ -327,8 +328,10 @@ ccResponse.updateResponse = function() {
     }
 }
 document.getElementById('btn-intubation').onclick = function() {
-    console.log({'name': 'intervention-started', 'interventionName': 'intubation'});
     socket.emit('event', {'name': 'intervention-started', 'interventionName': 'intubation'});
+}
+document.getElementById('btn-uvc').onclick = function() {
+    socket.emit('event', {'name': 'intervention-started', 'interventionName': 'uvc'});
 }
 
 socket.on('hardware-connection-info', function(data) {
