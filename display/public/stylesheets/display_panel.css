@@ -1,0 +1,106 @@
+body {
+  background-color: #000;
+  font-family: 'texgyreheros', sans-serif;
+}
+h1, h2, h3 {
+  color: white;
+}
+.container-fluid {
+    margin: 20px;
+}
+.vertical-center {
+    min-height: 90%;
+    min-height: 90vh;
+
+    display: flex;
+    align-items: center;
+}
+
+#chart path {
+  stroke: white;
+}
+#chart g .tick > line {
+  stroke: white;
+}
+#chart .c3-ygrid-line > line {
+  stroke-width: 0px;
+}
+
+#chart .c3-axis {
+    stroke-width: 3px;
+    color: white;
+}
+#chart .c3-axis-x-label {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+    fill: white;
+}
+#chart .c3-axis-y-label {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+    fill: white;
+}
+#chart .tick {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+    fill: white;
+}
+#chart .c3-area {
+    opacity: 1;
+    stroke-width: 0px;
+}
+#chart .c3-line-SpO2 {
+    stroke-width: 5px;
+}
+#chart .c3-line-FiO2 {
+    stroke-width: 5px;
+}
+#chart .spO2-target-label {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+}
+#chart .spO2-label {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+}
+#chart .fiO2-label {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+}
+#chart .c3-grid text {
+    fill: white;
+}
+
+
+#current-display {
+    margin-left: 100px;
+}
+.current-display {
+    font-size: 72px;
+    font-weight: bold;
+    font-family: 'texgyreheros', sans-serif;
+    line-height: 0.5;
+}
+.spo2-color {
+    color: #00FFFF;
+}
+.fio2-color {
+    color: #32CD32;
+}
+.hr-color {
+    color: #F0E442;
+}
+.current-display-box {
+    margin-top: 36px;
+    margin-bottom: 36px;
+}
+
+canvas .display-waveform {
+    background-color: black;
+}

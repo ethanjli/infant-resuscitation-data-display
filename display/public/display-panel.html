@@ -1,0 +1,347 @@
+<!doctype html>
+
+<head>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
+<script src="/javascripts/c3.js"></script>
+
+<script src="/javascripts/everpolate.browserified.min.js"></script>
+
+<link type="text/css" rel="stylesheet" href="/stylesheets/texgyreheros.css">
+<link type="text/css" rel="stylesheet" href="/stylesheets/display_panel.css">
+
+<script src="/javascripts/common.js"></script>
+<script src="/javascripts/displays.js"></script>
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <div class="row vertical-center">
+        <div id="chart" class="col-md-9 col-sm-9 col-xs-9"></div>
+        <div id="current-display" class="col-md-1 col-md-offset-1">
+            <div class="row current-display-box">
+                <h1 class="current-display-label spo2-color">SpO<sub>2</sub>:</h1>
+                <h2 id="current-spo2-display" class="current-display spo2-color">???</h2>
+                  <canvas width="200" height="50" class="display-waveform" id="spo2-ppg-display"></canvas>
+            </div>
+            <div class="row current-display-box">
+                <h1 class="current-display-label hr-color">HR:</h1>
+                <h2 id="current-hr-display" class="current-display hr-color">???</h2>
+                  <canvas width="200" height="50" class="display-waveform" id="hr-ecg-display"></canvas>
+            </div>
+            <div class="row current-display-box">
+                <h1 class="current-display-label fio2-color">FiO<sub>2</sub>:</h1>
+                <h2 id="current-fio2-display" class="current-display fio2-color">0%</h2>
+            </div>
+            <div class="row current-display-box">
+                <h1 class="current-display-label">Time:</h1>
+                <h2 id="current-time-display" class="current-display"></h2>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <span id="status-connection" class="label label-danger">Not connected to simulation server!</span>
+    </div>
+</div>
+
+<script>
+var socket = io.connect(window.location.host);
+var socketConnection = new SocketConnection({
+    clientType: 'display-panel',
+    connectionStatusElem: 'status-connection',
+    socket: socket
+});
+var apgarTime = new ReadableValue({
+    elem: 'current-time-display',
+    units: 'time',
+    min: 0,
+    socket: socket,
+    messageName: 'tick'
+});
+var hr = new ReadableValue({
+    elem: 'current-hr-display',
+    units: 'bpm',
+    min: 0,
+    max: 200,
+    missingString: '???'
+});
+var spO2 = new ReadableValue({
+    elem: 'current-spo2-display',
+    units: '%',
+    min: 0,
+    max: 1,
+    missingString: '???'
+});
+var fiO2 = new ReadableValue({
+    elem: 'current-fio2-display',
+    units: '%',
+    min: 0.21,
+    max: 1,
+    missingString: '???',
+    socket: socket,
+    messageName: 'fiO2'
+});
+var ppg = new WaveformDisplay({
+    canvasElem: 'spo2-ppg-display',
+    color: '#00FFFF',
+    thickness: 2,
+    amplitudeGain: 24,
+    constantGain: 48,
+    scanSpeed: 0.5,
+    data: ppgData
+});
+var ecg = new WaveformDisplay({
+    canvasElem: 'hr-ecg-display',
+    color: '#F0E442',
+    thickness: 2,
+    amplitudeGain: 20,
+    constantGain: 40,
+    scanSpeed: 0.5,
+    data: ecgData
+});
+
+var chart = c3.generate({
+    bindto: '#chart',
+    size: {
+        //width: 1000,
+        height: 768,
+    },
+    data: {
+        xs: {
+            targetUpper: 'targetTime',
+            targetLower: 'targetTime',
+            SpO2: 'signalTime',
+            FiO2: 'signalTime'
+        },
+        xFormat: '%M:%S',
+        columns: [
+            ['targetTime'].concat(nrpTarget.time.map(toDateString)),
+            ['targetUpper'].concat(nrpTarget.upper),
+            ['targetLower'].concat(nrpTarget.lower),
+            ['targetTime', toDateString(60), toDateString(300), toDateString(600), toDateString(2400)],
+            ['targetUpper', 0.65, 0.85, 0.95, 0.95],
+            ['targetLower', 0.6, 0.8, 0.85, 0.85],
+            ['signalTime'],
+            ['SpO2'],
+            ['FiO2']
+        ],
+        types: {
+            targetLower: 'area',
+            targetUpper: 'area',
+            SpO2: 'line',
+            FiO2: 'line'
+        },
+        colors: {
+            targetLower: 'black',
+            targetUpper: '#00AFAF',
+            SpO2: '#00FFFF',
+            FiO2: '#228B22'
+        }
+    },
+    axis: {
+        x: {
+            label: {
+                text: 'Time (min:sec)',
+                position: 'outer-center'
+            },
+            type: 'timeseries',
+            tick: {
+                format: '%M:%S',
+                fit: false,
+                culling: {
+                    max: 11
+                },
+                count: 11,
+                values: [toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]
+            },
+            min: toDateString(0),
+            max: toDateString(360),
+            padding: {
+                left: 0,
+                right: 0.09,
+                unit: 'ratio'
+            },
+            height: 60
+        },
+        y: {
+            label: {
+                text: 'SpO2, FiO2 (%)',
+                position: 'outer-middle'
+            },
+            show: true,
+            tick: {
+                format: function(number) {return number * 100;}
+            },
+            min: 0.2,
+            max: 1,
+            padding: 0
+        }
+    },
+    legend: {
+        show: false
+    },
+    tooltip: {
+        show: false
+    },
+    point: {
+        show: false
+    },
+    padding: {
+        top: 20,
+        left: 100,
+        right: 40,
+        bottom: 40
+    },
+    transition: {
+        duration: 0
+    }
+});
+
+function setCurrentDisplay(time, spO2Value, fiO2Value, hrValue) {
+    apgarTime.update(time);
+    spO2.update(spO2Value);
+    fiO2.update(fiO2Value);
+    hr.update(hrValue)
+    if (hrValue === undefined || hrValue === null || isNaN(hrValue)) {
+        ecg.disconnect();
+        ppg.disconnect();
+    } else {
+        ecg.connect();
+        ppg.connect();
+        ecg.setFrequency(hrValue);
+        ppg.setFrequency(hrValue);
+    }
+}
+
+function updateDisplay(time, spO2Value, fiO2Value, hrValue) {
+    var dateString = toDateString(time);
+    if (time > 360) {
+        chart.axis.tickFit(true);
+        chart.axis.tickValues(undefined);
+        chart.axis.tickCount(11);
+    }
+    if (spO2Value === null) spO2Value = NaN;
+    if (fiO2Value === null) fiO2Value = NaN;
+    if (hrValue === null) hrValue = NaN;
+    chart.flow({
+        columns: [
+            ['signalTime', dateString],
+            ['SpO2', spO2Value],
+            ['FiO2', fiO2Value]
+        ],
+        duration: 0,
+        to: toDateString(0),
+        done: function() {
+            if (time > 360) {
+                chart.axis.max({x: toDateString(Math.ceil(time / 60) * 60)});
+            }
+            if (!isNaN(spO2Value) && !isNaN(fiO2Value)) {
+                var annotationDeltaY = 0;
+                if (time > 360) annotationDeltaY = -0.02;
+                chart.ygrids([
+                    {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
+                    //{value: spO2Value + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+                    //{value: fiO2Value + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+                ]);
+            }
+        }
+    });
+    setCurrentDisplay(time, spO2Value, fiO2Value, hrValue);
+}
+
+socket.on('connect', function(data) {
+    chart.unload({
+        ids: ['signalTime', 'SpO2', 'FiO2']
+    });
+})
+socket.on('initialize', function(data) {
+    if (data === null) {
+        console.log('Sockets: Initializing.');
+        chart.axis.max({x: toDateString(360)});
+        spO2.update(null);
+        hr.update(null);
+        fiO2.update(fiO2.min);
+        ecg.disconnect();
+        ppg.disconnect();
+        return;
+    } else {
+        console.log('Sockets: Initializing with previous data.');
+    }
+    setCurrentDisplay(data.time[data.time.length - 1], data.spO2Sensor[data.spO2Sensor.length - 1], data.fiO2[data.fiO2.length - 1], data.hrSensor[data.hrSensor.length - 1]);
+    var time = data.time.map(toDateString);
+    time.unshift('signalTime');
+    var spO2Signal = data.spO2Sensor;
+    spO2Signal.unshift('SpO2');
+    var fiO2Signal = data.fiO2;
+    fiO2Signal.unshift('FiO2');
+    var annotationDeltaY = 0;
+    if (data.time[data.time.length - 1] > 360) {
+        chart.axis.max({x: time[time.length - 1]});
+        chart.axis.tickFit(true);
+        chart.axis.tickValues(undefined);
+        chart.axis.tickCount(11);
+        annotationDeltaY = -0.02;
+    } else {
+        chart.axis.max({x: toDateString(360)});
+        chart.axis.tickFit(false);
+        chart.axis.tickValues([toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]);
+        chart.axis.tickCount(11);
+    }
+    chart.ygrids([
+        {value: 0.87 - annotationDeltaY / 2, text: 'SpO2 Target', class: 'spO2-target-label'},
+        //{value: data.spO2Sensor[data.spO2Sensor.length - 1] + annotationDeltaY, text: 'SpO2', class: 'spO2-label'},
+        //{value: data.fiO2[data.fiO2.length - 1] + annotationDeltaY, text: 'FiO2', class: 'fiO2-label'}
+    ]);
+    chart.load({
+        columns: [
+            time,
+            spO2Signal,
+            fiO2Signal
+        ]
+    });
+});
+socket.on('update', function(data) {
+    updateDisplay(data.time, data.spO2Sensor, data.fiO2, data.hrSensor);
+});
+socket.on('reset', function(data) {
+    console.log('Sockets: Resetting data.');
+    chart.unload({
+        ids: ['signalTime', 'SpO2', 'FiO2'],
+        done: function() {
+            chart.flow({
+                columns: [
+                    ['signalTime', toDateString(data.time)],
+                    ['SpO2', data.spO2Sensor],
+                    ['FiO2', data.fiO2]
+                ], done: function() {
+                    chart.axis.max({x: toDateString(360)});
+                    chart.axis.tickFit(false);
+                    chart.axis.tickValues([toDateString(0), toDateString(60), toDateString(120), toDateString(180), toDateString(240), toDateString(300), toDateString(360)]);
+                    chart.axis.tickCount(11);
+                    setCurrentDisplay(data.time, data.spO2Sensor, data.fiO2, data.hrSensor);
+                    chart.ygrids([
+                        {value: 0.87, text: 'SpO2 Target', class: 'spO2-target-label'},
+                    ]);
+                }
+            });
+        }
+    });
+});
+socket.on('redirect', function(data) {
+    console.log('Sockets: Redirecting to ' + data);
+    window.location = data;
+});
+</script>
+
+</body>

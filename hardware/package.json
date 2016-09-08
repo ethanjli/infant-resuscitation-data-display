@@ -1,0 +1,12 @@
+{
+  "name": "infant-resuscitation-hardware-client",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node hardware-interaction-client.js"
+  },
+  "dependencies": {
+    "johnny-five": "~0.9.59",
+    "socket.io-client": "~1.4.8"
+  }
+}
