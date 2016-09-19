@@ -145,6 +145,7 @@ module.exports = function(socketio, ticksUntilStream, sensors) {
 
   // Event logging
   function logEvent(newEvent) {
+    console.log('[Streaming] Logging event:', newEvent);
     events.push(_.assign(newEvent, {time: sensors.get('time')}));
   }
 
