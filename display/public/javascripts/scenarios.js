@@ -106,17 +106,23 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
     namespace: 'InterventionResponse',
     initialState: 'delivered',
     states: {
-        delivered: {
+        delivered: { // as in, infant was delivered
             _onEnter: function(client) {
                 client.interventionBtn.innerHTML = client.startInterventionText;
                 client.immediateInterventionBtn.innerHTML = client.startInterventionImmediatelyText;
+                if (client.interruptResumeInterventionBtn) {
+                    client.interruptResumeInterventionBtn.innerHTML = client.interruptInterventionText;
+                    client.interruptResumeInterventionBtn.disabled = 'disabled';
+                }
                 client.responding = false;
+                client.interrupted = false;
                 client.onDelivered();
             },
             clickIntervention: 'interventionStarted',
             clickImmediateIntervention: 'responding',
             reset: function(client) {
                 client.responding = false;
+                client.interrupted = false;
                 client.onDelivered();
             }
         },
@@ -139,14 +145,57 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
                 client.interventionBtn.innerHTML = client.respondingText;
                 client.interventionBtn.disabled = 'disabled';
                 client.immediateInterventionBtn.innerHTML = client.stopRespondingText;
+                if (client.interruptResumeInterventionBtn) {
+                    client.interruptResumeInterventionBtn.innerHTML = client.interruptInterventionText;
+                    client.interruptResumeInterventionBtn.disabled = '';
+                }
+                if (client.responding === false) { // this occurs if we transition from delivered or interventionStarted but not interrupted
+                    client.socket.emit('event', {'name': 'intervention-response-started', 'interventionName': client.name});
+                    client.onResponding();
+                }
                 client.responding = true;
-                client.socket.emit('event', {'name': 'intervention-response-started', 'interventionName': client.name});
-                client.onResponding();
             },
             _onExit: function(client) {
                 client.interventionBtn.disabled = '';
+                if (client.interruptResumeInterventionBtn) {
+                    client.interruptResumeInterventionBtn.disabled = 'disabled';
+                }
             },
-            clickImmediateIntervention: 'delivered',
+            clickImmediateIntervention: function(client) {
+                client.socket.emit('event', {'name': 'intervention-response-stopped', 'interventionName': client.name});
+                client.onStopped();
+                this.transition(client, 'delivered');
+            },
+            clickInterruptResumeIntervention: 'interrupted',
+            reset: 'delivered'
+        },
+        interrupted: {
+            _onEnter: function(client) {
+                client.interventionBtn.disabled = 'disabled';
+                if (client.interruptResumeInterventionBtn) {
+                    client.interruptResumeInterventionBtn.innerHTML = client.resumeInterventionText;
+                    client.interruptResumeInterventionBtn.disabled = '';
+                }
+                client.interrupted = true;
+                client.socket.emit('event', {'name': 'intervention-response-interrupted', 'interventionName': client.name});
+                client.onInterrupted();
+            },
+            _onExit: function(client) {
+                if (client.interruptResumeInterventionBtn) {
+                    client.interruptResumeInterventionBtn.disabled = 'disabled';
+                }
+                client.interrupted = false;
+            },
+            clickImmediateIntervention: function(client) {
+                client.socket.emit('event', {'name': 'intervention-response-stopped', 'interventionName': client.name});
+                client.onStopped();
+                this.transition(client, 'delivered');
+            },
+            clickInterruptResumeIntervention: function(client) {
+                client.socket.emit('event', {'name': 'intervention-response-resumed', 'interventionName': client.name});
+                this.transition(client, 'responding');
+                client.onResume();
+            },
             reset: 'delivered'
         }
     },
@@ -159,6 +208,9 @@ var InterventionResponseBehavior = new machina.BehavioralFsm({
     clickImmediateIntervention: function(client) {
         this.handle(client, 'clickImmediateIntervention');
     },
+    clickInterruptResumeIntervention: function(client) {
+        this.handle(client, 'clickInterruptResumeIntervention');
+    },
     interventionResponseTimeout: function(client) {
         this.handle(client, 'interventionResponseTimeout');
     }
@@ -167,16 +219,22 @@ function InterventionResponse(options) {
     this.name = options.name;
     this.interventionBtn = document.getElementById(options.interventionBtn);
     this.immediateInterventionBtn = document.getElementById(options.immediateInterventionBtn);
+    if (options.interruptResumeInterventionBtn) {
+        this.interruptResumeInterventionBtn = document.getElementById(options.interruptResumeInterventionBtn);
+    }
     this.delay = options.delay;
     this.startInterventionText = options.startInterventionText;
     this.startInterventionImmediatelyText = options.startInterventionImmediatelyText;
     this.cancelInterventionText = options.cancelInterventionText;
     this.respondingText = options.respondingText;
     this.stopRespondingText = options.stopRespondingText;
+    this.interruptInterventionText = options.interruptInterventionText;
+    this.resumeInterventionText = options.resumeInterventionText;
     this.interventionResponseTimer = null;
     this.timeUntilResponse = 0;
     this.socket = options.socket;
     this.responding = false;
+    this.interrupted = false;
     this.listen();
     this.monitor();
 }
@@ -187,15 +245,24 @@ InterventionResponse.prototype.listen = function() {
         if (data === 'ready') InterventionResponseBehavior.reset(this);
     }).bind(this));
     this.socket.on('tick', (function() {
-        if (this.responding) this.updateResponse();
+        if (this.responding) {
+            if (this.interrupted) this.updateInterruptedResponse();
+            else this.updateResponse();
+        }
     }).bind(this));
     this.socket.on('fiO2', (function() {
-        if (this.responding) this.updateResponse();
+        if (this.responding) {
+            if (this.interrupted) this.updateInterruptedResponse();
+            else this.updateResponse();
+        }
     }).bind(this));
 }
 InterventionResponse.prototype.monitor = function() {
     this.interventionBtn.onclick = InterventionResponseBehavior.clickIntervention.bind(InterventionResponseBehavior, this);
     this.immediateInterventionBtn.onclick = InterventionResponseBehavior.clickImmediateIntervention.bind(InterventionResponseBehavior, this);
+    if (this.interruptResumeInterventionBtn) {
+        this.interruptResumeInterventionBtn.onclick = InterventionResponseBehavior.clickInterruptResumeIntervention.bind(InterventionResponseBehavior, this);
+    }
 }
 InterventionResponse.prototype.countDownInterventionResponse = function() {
     if (this.timeUntilResponse > 0) {
@@ -207,4 +274,8 @@ InterventionResponse.prototype.countDownInterventionResponse = function() {
 }
 InterventionResponse.prototype.onDelivered = function() {}
 InterventionResponse.prototype.onResponding = function() {}
+InterventionResponse.prototype.onInterrupted = function() {}
+InterventionResponse.prototype.onResume = function() {}
 InterventionResponse.prototype.updateResponse = function() {}
+InterventionResponse.prototype.updateInterruptedResponse = function() {}
+InterventionResponse.prototype.onStopped = function() {}

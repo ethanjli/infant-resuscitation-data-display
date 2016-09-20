@@ -104,6 +104,7 @@
                                     <div class="btn-group-vertical" role="group">
                                         <button type="button" id="btn-ppv" class="btn btn-default"></button>
                                         <button type="button" id="btn-ppv-immediate" class="btn btn-default"></button>
+                                        <button type="button" id="btn-ppv-interruptresume" class="btn btn-default"></button>
                                         <button type="button" id="btn-cc" class="btn btn-default"></button>
                                         <button type="button" id="btn-cc-immediate" class="btn btn-default"></button>
                                         <button type="button" id="btn-intubation" class="btn btn-default">Begin Intubation</button>
@@ -275,23 +276,34 @@ var ppvResponse = new InterventionResponse({
     name: 'ppv',
     interventionBtn: 'btn-ppv',
     immediateInterventionBtn: 'btn-ppv-immediate',
+    interruptResumeInterventionBtn: 'btn-ppv-interruptresume',
     delay: 15,
     startInterventionText: 'Begin PPV',
     startInterventionImmediatelyText: 'PPV Began >15 Sec. Ago',
     cancelInterventionText: 'Cancel PPV',
     respondingText: 'Responding to FiO2',
     stopRespondingText: 'Stop Responding to FiO2',
+    interruptInterventionText: 'Remove Bag Mask',
+    resumeInterventionText: 'Place Bag Mask',
     socket: socket
 });
 ppvResponse.onResponding = function() {
     console.log('Scenario: Now responding to FiO2.');
     this.updateResponse();
 }
+ppvResponse.onInterrupted = function() {
+    console.log('Scenario: Bag mask was removed, effective FiO2 is now 21%.');
+    this.updateResponse();
+}
+ppvResponse.onResume = function() {
+    console.log('Scenario: Bag mask was placed.');
+}
 ppvResponse.updateResponse = function() {
     var responseTarget = this.getSpO2ResponseTarget();
     if (!responseTarget) return;
     responseTarget = Math.round(100 * responseTarget);
     spO2AutoAdjuster.autoAdjustTargetValue.update(responseTarget, true);
+    AutoAdjusterBehavior.resume(spO2AutoAdjuster);
     AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
 }
 ppvResponse.getSpO2ResponseTarget = function() {
@@ -301,6 +313,14 @@ ppvResponse.getSpO2ResponseTarget = function() {
     else if (0.34 < fiO2Value && fiO2Value <= 0.59) return getTargetRange(apgarTime.rawValue).lower - 0.1;
     else if (0.59 < fiO2Value && fiO2Value <= 0.89) return getTargetRange(apgarTime.rawValue).lower - 0.05;
     else return getTargetRange(apgarTime.rawValue).mid;
+}
+ppvResponse.updateInterruptedResponse = function() {
+    spO2AutoAdjuster.autoAdjustTargetValue.update(30, true);
+    AutoAdjusterBehavior.adjust(spO2AutoAdjuster);
+}
+ppvResponse.onStopped = function() {
+    console.log('Scenario: SpO2 is no longer responding to FiO2.');
+    AutoAdjusterBehavior.pause(spO2AutoAdjuster);
 }
 
 var ccResponse = new InterventionResponse({
@@ -312,7 +332,7 @@ var ccResponse = new InterventionResponse({
     startInterventionImmediatelyText: 'CC Began >15 Sec. Ago',
     cancelInterventionText: 'Cancel CC',
     respondingText: 'Responding to CC',
-    stopRespondingText: 'Stop Responding to CC',
+    stopRespondingText: 'Stop CC',
     socket: socket
 });
 ccResponse.onResponding = function() {
