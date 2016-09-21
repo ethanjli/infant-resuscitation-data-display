@@ -1,0 +1,12 @@
+{
+  "name": "infant-resuscitation-tracing-analyzer",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "jsonfile": "^2.4.0",
+    "lodash": "^4.16.1",
+    "minimist": "^1.2.0",
+    "prompt-sync": "^4.1.4",
+    "promptly": "^2.1.0"
+  }
+}
