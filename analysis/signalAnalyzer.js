@@ -4,6 +4,7 @@ var fiO2Analyzers = require('./fiO2SignalAnalyzers');
 
 module.exports = {
   analyze: function(results, tracing) {
+    console.log('SIGNAL ANNOTATIONS');
     var annotations = {};
     annotations.apgarTime = {
       description: 'Apgar time',

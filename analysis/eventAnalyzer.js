@@ -4,7 +4,7 @@ var promptly = require('promptly');
 var kScenarioEnd = 250;
 
 module.exports = {
-  analyze: function(results, tracing, done) {
+  analyze: function(results, tracing, done, previousResults) {
     var timeMeasurements = {};
     var intervalMeasurements = {
       supplyingOxygen: {
@@ -22,7 +22,7 @@ module.exports = {
     measureManualEvents(timeMeasurements, function(timeMeasurements) {
       results.timeMeasurements = timeMeasurements;
       done(results);
-    });
+    }, previousResults);
   }
 }
 
@@ -35,7 +35,10 @@ function measureBasicEvents(timeMeasurements, intervalMeasurements, events) {
         throw {name: 'Repeated simulation initialization', data: event};
       }
       simulationStart = event.time;
-      console.log('Apgar timer initialized at', simulationStart + 's');
+      measureTimeToUniqueEvent(timeMeasurements, 'scenarioStarted',
+        'Time until Apgar timer was at 00:00',
+        simulationStart, {time: 0}
+      )
     },
     'delayed-sensor-connection-timer-started': function(event) {
       measureTimeToUniqueEvent(timeMeasurements, 'sensorPlaced',
@@ -119,6 +122,7 @@ function measureBasicEvents(timeMeasurements, intervalMeasurements, events) {
   }
 
   console.log('AUTOMATIC EVENT MEASUREMENTS');
+  console.log('Note: times are relative to the start of the scenario.');
   events.forEach(function(event) {
     try {
       eventHandlers[event.name](event);
@@ -129,6 +133,7 @@ function measureBasicEvents(timeMeasurements, intervalMeasurements, events) {
   console.log('');
 
   console.log('AUTOMATIC INTERVAL MEASUREMENTS');
+  console.log('Note: start and end times are relative to the start of the scenario.');
   _.forOwn(intervalMeasurements, function(intervalType) {
     console.log(intervalType.description + ':', intervalType.data);
   });
@@ -137,44 +142,74 @@ function measureBasicEvents(timeMeasurements, intervalMeasurements, events) {
   return simulationStart;
 }
 
-function measureManualEvents(measurements, done) {
+function measureManualEvents(measurements, done, previousResults) {
   console.log('MANUAL EVENT MEAUREMENTS');
-  promptly.prompt('CAPE video recording timestamp of when Apgar timer started at 00:10, in seconds: ',
-    {
-      default: '',
-      validator: validateOptionalTime
-    },
-    function(err, value) {
-      if (value === null) {
-        done(measurements);
-        return;
-      }
-      var startTime = value;
-      promptly.prompt('CAPE video recording timestamp of when CC stopped, in seconds: ',
-        {
-          default: '',
-          validator: validateOptionalTime
-        },
-        function(err, value) {
-          if (value === null) {
-            console.log('');
-            done(measurements)
-            return;
-          }
-          measureTimeToUniqueEvent(measurements, 'ccStopped',
-            'Time until chest compressions were stopped', startTime, {time: value}
-          );
-          done(measurements);
-        }
-      );
+  if (previousResults !== undefined) {
+    console.log('Note: times are relative to the start of the scenario.');
+    var previousEvent;
+    previousEvent = previousResults.timeMeasurements.roomVideoRecordingStarted;
+    if (previousEvent !== undefined) {
+      console.log('Using saved roomVideoRecordingStarted event at ' + previousEvent.time + 's after the scenario started');
+      measurements.roomVideoRecordingStarted = previousEvent;
     }
-  );
+    previousEvent = previousResults.timeMeasurements.ccStopped;
+    if (previousEvent !== undefined) {
+      console.log('Using saved ccStopped event at ' + previousEvent.time + 's after the scenario started');
+      measurements.ccStopped = previousEvent;
+    }
+  } else {
+    promptly.prompt('CAPE video recording timestamp of when scenario started, in seconds or tMM:SS format (e.g. t00:59): ',
+      {
+        default: '',
+        validator: validateOptionalTime
+      },
+      function(err, value) {
+        if (value === null) {
+          done(measurements);
+          return;
+        }
+        var startTime = value;
+        measureTimeToUniqueEvent(measurements, 'roomVideoRecordingStarted',
+          'Time until CAPE video recordings started', startTime, {time: 0}
+        );
+        promptly.prompt('CAPE video recording timestamp of when CC stopped, in seconds: ',
+          {
+            default: '',
+            validator: validateOptionalTime
+          },
+          function(err, value) {
+            if (value === null) {
+              console.log('');
+              done(measurements)
+              return;
+            }
+            measureTimeToUniqueEvent(measurements, 'ccStopped',
+              'Time until chest compressions were stopped', startTime, {time: value}
+            );
+            done(measurements);
+          }
+        );
+      }
+    );
+  }
+  console.log('');
+}
+
+function fromTimeString(timeString) {
+    var a = timeString.split(':');
+    return a[0] * 60 + a[1] * 1;
 }
 
 function validateOptionalTime(value) {
   if (value === '') return null;
   var validated = parseInt(value);
-  if (isNaN(validated)) throw new Error('Invalid time');
+  if (isNaN(validated)) {
+    var validated = fromTimeString(value.slice(1));
+    if (isNaN(validated)) {
+      throw new Error('Invalid time');
+    }
+    console.log(validated);
+  }
   return validated;
 }
 

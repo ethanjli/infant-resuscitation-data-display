@@ -7,37 +7,56 @@ var prompt = require('prompt-sync')();
 var eventAnalyzer = require('./eventAnalyzer');
 var signalAnalyzer = require('./signalAnalyzer');
 
+console.log('FILE LOADING');
 var argv = minimist(process.argv.slice(2));
 var inputPath = argv['_'][0];
 console.log('Loading tracing from \'' + inputPath + '\'');
+var outputPath = path.join(
+  path.dirname(inputPath),
+  path.basename(inputPath, '.json') + '_analyzed.json'
+);
+var updateMode = argv['update'];
+if (updateMode === 'true') {
+  console.log('Loading previous analysis results from \'' + outputPath + '\'');
+  console.log('');
+  jsonfile.readFile(outputPath, function(err, previousResults) {
+    if (err) throw err;
+    jsonfile.readFile(inputPath, function(err, tracing) {
+      onReadInputFile(err, tracing, previousResults);
+    });
+  });
+} else {
+  console.log('');
+  jsonfile.readFile(inputPath, onReadInputFile);
+}
 
-jsonfile.readFile(inputPath, function(err, tracing) {
+function onReadInputFile(err, tracing, previousResults) {
   if (err) throw err;
   var results = {};
-  analyzeMetadata(results, tracing);
-  analyzeClientList(results, tracing);
+  analyzeMetadata(results, tracing, previousResults);
+  analyzeClientList(results, tracing, previousResults);
   eventAnalyzer.analyze(results, tracing, function(results) {
     signalAnalyzer.analyze(results, tracing);
     saveResults(results);
-  });
-});
+  }, previousResults);
+}
 
 function saveResults(results) {
-  var outputPath = path.join(
-    path.dirname(inputPath),
-    path.basename(inputPath, '.json') + '_analyzed.json'
-  );
   console.log('Saving analysis results to \'' + outputPath + '\'');
   jsonfile.writeFile(outputPath, results, {spaces: 2}, function(err) {
     if (err) throw err;
   });
 }
 
-function analyzeMetadata(results, tracing) {
+function analyzeMetadata(results, tracing, previousResults) {
   console.log('METADATA');
   console.log('Scenario started at', (new Date(tracing.startTime.iso).toLocaleString()));
-  var id = prompt('What is the full (patient+scenario) id of this tracing? ');
-  results.id = id;
+  if (previousResults !== undefined) {
+    console.log('Using saved full (patient+scenario) id \'' + previousResults.id + '\'');
+    results.id = previousResults.id;
+  } else {
+    results.id = prompt('What is the full (patient+scenario) id of this tracing? ');
+  }
   console.log('');
 }
 
