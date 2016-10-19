@@ -42,15 +42,13 @@ module.exports.segment = function(array) {
     if (currentSegment === undefined || currentSegment.value !== value) {
       currentSegment = {
         value: value,
-        length: 1,
         startIndex: index,
         endIndex: index
       };
       segments.push(currentSegment);
       return segments;
     }
-    currentSegment.length += 1;
-    currentSegment.endIndex += 1;
+    currentSegment.endIndex = index;
     return segments;
   }, []);
 }
@@ -58,11 +56,11 @@ module.exports.numSegmentsByValue = function(segments) {
   var grouped = _.groupBy(segments, 'value');
   return _.mapValues(grouped, 'length');
 }
-module.exports.numSegmentSamplesByValue = function(segments) {
+module.exports.totalDurationsByValue = function(segments) {
   var grouped = _.groupBy(segments, 'value');
   return _.mapValues(grouped, function(groupedSegments) {
     return groupedSegments.reduce(function(numSamples, segment) {
-      return numSamples + segment.length;
+      return numSamples + segment.duration;
     }, 0);
   });
 }

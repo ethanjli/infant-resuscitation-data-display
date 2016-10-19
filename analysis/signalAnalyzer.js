@@ -3,7 +3,9 @@ var utils = require('./signalAnalyzerUtils');
 var spO2Analyzers = require('./spO2SignalAnalyzers');
 var fiO2Analyzers = require('./fiO2SignalAnalyzers');
 
-var kSegmentMinSamples = 2;
+var kSegmentMinDuration = 4;
+var kMinStartTime = 0;
+var kMaxEndTime = 240;
 
 module.exports = {
   analyze: function(results, tracing) {
@@ -13,6 +15,12 @@ module.exports = {
       description: 'Apgar time',
       data: tracing.samples.time
     };
+    annotations.scenarioTime = {
+      description: 'Time relative to when the scenario started',
+      data: tracing.samples.time.map(function(sample) {
+        return sample + results.timeMeasurements.scenarioStarted.time;
+      })
+    }
     var segmentations = {};
     analyzeSpO2Mean(annotations, segmentations, tracing, results.clients.controlPanel);
     analyzeFiO2(annotations, segmentations, tracing, results.clients.controlPanel);
@@ -87,9 +95,17 @@ function annotateWithMapper(annotations, samples, annotator) {
 function segmentAnnotation(annotations, segmentations, annotator) {
   var annotationName = annotator.name;
   var annotation = annotations[annotationName];
-  segmentation = utils.segment(annotation.data).filter(function(segment) {
-    return segment.length >= kSegmentMinSamples;
-  });
+  var time = annotations.scenarioTime.data;
+  segmentation = utils.segment(annotation.data)
+    .map(function(segment) {
+      segment.start = Math.max(kMinStartTime, time[segment.startIndex]);
+      segment.end = Math.min(kMaxEndTime, time[segment.endIndex]);
+      segment.duration = segment.end - segment.start;
+      return segment;
+    })
+    .filter(function(segment) {
+      return segment.duration >= kSegmentMinDuration;
+    });
 
   segmentations[annotationName] = {
     description: annotation.description,
@@ -97,7 +113,7 @@ function segmentAnnotation(annotations, segmentations, annotator) {
     summary: {
       numSegments: segmentation.length,
       numSegmentsByValue: utils.numSegmentsByValue(segmentation),
-      numSegmentSamplesByValue: utils.numSegmentSamplesByValue(segmentation),
+      totalDurationsByValue: utils.totalDurationsByValue(segmentation),
       initialSegmentsByValue: utils.initialSegmentsByValue(segmentation)
     }
   }
