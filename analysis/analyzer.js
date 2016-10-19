@@ -5,6 +5,7 @@ var _ = require('lodash');
 var prompt = require('prompt-sync')();
 
 var eventAnalyzer = require('./eventAnalyzer');
+var signalAnalyzer = require('./signalAnalyzer');
 
 var argv = minimist(process.argv.slice(2));
 var inputPath = argv['_'][0];
@@ -15,7 +16,10 @@ jsonfile.readFile(inputPath, function(err, tracing) {
   var results = {};
   analyzeMetadata(results, tracing);
   analyzeClientList(results, tracing);
-  eventAnalyzer.analyze(results, tracing, saveResults);
+  eventAnalyzer.analyze(results, tracing, function(results) {
+    signalAnalyzer.analyze(results, tracing);
+    saveResults(results);
+  });
 });
 
 function saveResults(results) {

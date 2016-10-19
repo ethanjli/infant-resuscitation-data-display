@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
+    "everpolate": "0.0.3",
     "jsonfile": "^2.4.0",
     "lodash": "^4.16.1",
     "minimist": "^1.2.0",
