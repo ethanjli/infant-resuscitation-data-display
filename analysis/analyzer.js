@@ -7,6 +7,8 @@ var prompt = require('prompt-sync')();
 var eventAnalyzer = require('./eventAnalyzer');
 var signalAnalyzer = require('./signalAnalyzer');
 
+var kFullIDRegex = /[0-9]{8}_P1a_[0-9]+_S[1-4]/;
+
 console.log('FILE LOADING');
 var argv = minimist(process.argv.slice(2));
 var inputPath = argv['_'][0];
@@ -53,10 +55,19 @@ function analyzeMetadata(results, tracing, previousResults) {
   console.log('METADATA');
   console.log('Scenario started at', (new Date(tracing.startTime.iso).toLocaleString()));
   if (previousResults !== undefined) {
-    console.log('Using saved full (patient+scenario) id \'' + previousResults.id + '\'');
+    console.log('Using saved full (subject+scenario) id \'' + previousResults.id + '\'');
     results.id = previousResults.id;
   } else {
-    results.id = prompt('What is the full (patient+scenario) id of this tracing? ');
+    results.id = prompt('What is the full (subject+scenario) id of this tracing? ');
+  }
+  if (kFullIDRegex.test(results.id)) {
+    var id_components = results.id.split('_');
+    results.subjectNumber = id_components[2];
+    console.log('This scenario involves subject ' + results.subjectNumber + '.');
+    results.scenarioNumber = id_components[3].slice(1);
+    console.log('This is scenario ' + results.scenarioNumber + ' for the subject.');
+  } else {
+    console.log('Warning: this id does not follow the standard format!');
   }
   console.log('');
 }
