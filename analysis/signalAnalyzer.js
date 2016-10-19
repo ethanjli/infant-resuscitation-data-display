@@ -1,36 +1,48 @@
 var _ = require('lodash');
+var utils = require('./signalAnalyzerUtils');
 var spO2Analyzers = require('./spO2SignalAnalyzers');
 var fiO2Analyzers = require('./fiO2SignalAnalyzers');
 
+var kSegmentMinSamples = 2;
+
 module.exports = {
   analyze: function(results, tracing) {
-    console.log('SIGNAL ANNOTATIONS');
+    console.log('SIGNAL ANALYSIS');
     var annotations = {};
     annotations.apgarTime = {
       description: 'Apgar time',
       data: tracing.samples.time
     };
-    annotateSpO2Mean(annotations, tracing, results.clients.controlPanel);
-    console.log('Annotated SpO2 signal.');
-    annotateFiO2(annotations, tracing, results.clients.controlPanel);
-    console.log('Annotated FiO2 signal.');
+    var segmentations = {};
+    analyzeSpO2Mean(annotations, segmentations, tracing, results.clients.controlPanel);
+    analyzeFiO2(annotations, segmentations, tracing, results.clients.controlPanel);
     results.signalAnnotations = annotations;
+    results.signalSegmentations = segmentations;
     console.log('');
   }
 }
 
-function annotateSpO2Mean(annotations, tracing, controlPanelType) {
-  [
+function analyzeSpO2Mean(annotations, segmentations, tracing, controlPanelType) {
+  var annotators = [
     spO2Analyzers.inTargetRange, spO2Analyzers.outsideTargetRange,
     spO2Analyzers.aboveTargetRange, spO2Analyzers.belowTargetRange,
     spO2Analyzers.signedDistanceFromTargetRange, spO2Analyzers.unsignedDistanceFromTargetRange,
     spO2Analyzers.signedDirectionFromTargetRange,
     spO2Analyzers.generateRegion(controlPanelType)
-  ]
-    .forEach(annotateWithMapper.bind(undefined, annotations, tracing.samples));
+  ];
+  annotators.forEach(annotateWithMapper.bind(undefined, annotations, tracing.samples));
+  console.log('Annotated SpO2 signal.');
+  var segmenters = [
+    spO2Analyzers.inTargetRange, spO2Analyzers.outsideTargetRange,
+    spO2Analyzers.aboveTargetRange, spO2Analyzers.belowTargetRange,
+    spO2Analyzers.signedDirectionFromTargetRange,
+    spO2Analyzers.generateRegion(controlPanelType)
+  ];
+  segmenters.forEach(segmentAnnotation.bind(undefined, annotations, segmentations));
+  console.log('Segmented SpO2 signal annotations.');
 }
-function annotateFiO2(annotations, tracing, controlPanelType) {
-  [
+function analyzeFiO2(annotations, segmentations, tracing, controlPanelType) {
+  var annotators = [
     'generateInTargetRange', 'generateOutsideTargetRange',
     'generateAboveTargetRange', 'generateBelowTargetRange',
     'generateSignedDistanceFromTargetRange', 'generateUnsignedDistanceFromTargetRange',
@@ -39,8 +51,19 @@ function annotateFiO2(annotations, tracing, controlPanelType) {
   ]
     .map(function(generator) {
       return fiO2Analyzers[generator](controlPanelType);
-    })
-    .forEach(annotateWithMapper.bind(undefined, annotations, tracing.samples));
+    });
+  annotators.forEach(annotateWithMapper.bind(undefined, annotations, tracing.samples));
+  console.log('Annotated FiO2 signal.');
+  var segmenters = [
+    'generateInTargetRange', 'generateOutsideTargetRange',
+    'generateAboveTargetRange', 'generateBelowTargetRange',
+    'generateSignedDirectionFromTargetRange', 'generateRegion'
+  ]
+    .map(function(generator) {
+      return fiO2Analyzers[generator](controlPanelType);
+    });
+  segmenters.forEach(segmentAnnotation.bind(undefined, annotations, segmentations))
+  console.log('Segmented FiO2 signal annotations.');
 }
 
 function mapTimeseries(times, values, mapper) {
@@ -61,3 +84,22 @@ function annotateWithMapper(annotations, samples, annotator) {
     data: mapTimeseries(samples.time, samples[annotator.sourceSignalName], annotator.mapper)
   };
 }
+function segmentAnnotation(annotations, segmentations, annotator) {
+  var annotationName = annotator.name;
+  var annotation = annotations[annotationName];
+  segmentation = utils.segment(annotation.data).filter(function(segment) {
+    return segment.length >= kSegmentMinSamples;
+  });
+
+  segmentations[annotationName] = {
+    description: annotation.description,
+    data: segmentation,
+    summary: {
+      numSegments: segmentation.length,
+      numSegmentsByValue: utils.numSegmentsByValue(segmentation),
+      numSegmentSamplesByValue: utils.numSegmentSamplesByValue(segmentation),
+      initialSegmentsByValue: utils.initialSegmentsByValue(segmentation)
+    }
+  }
+}
+

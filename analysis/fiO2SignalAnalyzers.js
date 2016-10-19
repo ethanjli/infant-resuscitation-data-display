@@ -113,12 +113,12 @@ module.exports.generateRegion = function(controlPanelType) {
 
 var kFiO2Range = {
   'ideal-scenario-control-panel': {
-    upper: 0.25,
-    lower: 0.34
+    lower: 0.25,
+    upper: 0.34
   },
   'extreme-scenario-control-panel': {
-    upper: 1.0,
-    lower: 0.9
+    lower: 0.9,
+    upper: 1.0
   }
 };
 
