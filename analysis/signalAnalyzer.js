@@ -15,6 +15,7 @@ module.exports = {
     annotateFiO2(annotations, tracing, results.clients.controlPanel);
     console.log('Annotated FiO2 signal.');
     results.signalAnnotations = annotations;
+    console.log('');
   }
 }
 

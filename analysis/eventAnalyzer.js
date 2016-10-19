@@ -157,42 +157,43 @@ function measureManualEvents(measurements, done, previousResults) {
       console.log('Using saved ccStopped event at ' + previousEvent.time + 's after the scenario started');
       measurements.ccStopped = previousEvent;
     }
-  } else {
-    promptly.prompt('CAPE video recording timestamp of when scenario started, in seconds or tMM:SS format (e.g. t00:59): ',
-      {
-        default: '',
-        validator: validateOptionalTime
-      },
-      function(err, value) {
-        if (value === null) {
-          done(measurements);
-          return;
-        }
-        var startTime = value;
-        measureTimeToUniqueEvent(measurements, 'roomVideoRecordingStarted',
-          'Time until CAPE video recordings started', startTime, {time: 0}
-        );
-        promptly.prompt('CAPE video recording timestamp of when CC stopped, in seconds: ',
-          {
-            default: '',
-            validator: validateOptionalTime
-          },
-          function(err, value) {
-            if (value === null) {
-              console.log('');
-              done(measurements)
-              return;
-            }
-            measureTimeToUniqueEvent(measurements, 'ccStopped',
-              'Time until chest compressions were stopped', startTime, {time: value}
-            );
-            done(measurements);
-          }
-        );
-      }
-    );
+    console.log('');
+    done(measurements);
+    return;
   }
-  console.log('');
+  promptly.prompt('CAPE video recording timestamp of when scenario started, in seconds or tMM:SS format (e.g. t00:59): ',
+    {
+      default: '',
+      validator: validateOptionalTime
+    },
+    function(err, value) {
+      if (value === null) {
+        done(measurements);
+        return;
+      }
+      var startTime = value;
+      measureTimeToUniqueEvent(measurements, 'roomVideoRecordingStarted',
+        'Time until CAPE video recordings started', startTime, {time: 0}
+      );
+      promptly.prompt('CAPE video recording timestamp of when CC stopped, in seconds: ',
+        {
+          default: '',
+          validator: validateOptionalTime
+        },
+        function(err, value) {
+          if (value === null) {
+            console.log('');
+            done(measurements)
+            return;
+          }
+          measureTimeToUniqueEvent(measurements, 'ccStopped',
+            'Time until chest compressions were stopped', startTime, {time: value}
+          );
+          done(measurements);
+        }
+      );
+    }
+  );
 }
 
 function fromTimeString(timeString) {

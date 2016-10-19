@@ -42,6 +42,7 @@ function onReadInputFile(err, tracing, previousResults) {
 }
 
 function saveResults(results) {
+  console.log('SAVING');
   console.log('Saving analysis results to \'' + outputPath + '\'');
   jsonfile.writeFile(outputPath, results, {spaces: 2}, function(err) {
     if (err) throw err;
