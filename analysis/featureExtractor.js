@@ -28,6 +28,24 @@ var kFeatureExtractors = [{
     return analysisResults.scenarioNumber;
   }
 }, {
+  name: 'newAfterOld',
+  description: 'Whether the new display came after the old display for the scenario type; 0 is before, 1 is after',
+  extractor: function(analysisResults) {
+    var displayPanel = analysisResults.clients.displayPanel;
+    var scenarioNumber = analysisResults.scenarioNumber;
+    if (displayPanel === 'minimal-display-panel') {
+      if (scenarioNumber <= 2) return 1;
+      else return 0;
+    }
+    else if (displayPanel === 'display-panel') {
+      if (scenarioNumber >= 3) return 1;
+      else return 0;
+    }
+    else {
+      return NaN;
+    }
+  }
+}, {
   name: 'scenarioType',
   description: 'Scenario type; 0 is ideal, 1 is extreme',
   extractor: function(analysisResults) {
@@ -138,6 +156,7 @@ var kFeatureExtractors = [{
 var argv = minimist(process.argv.slice(2));
 var inputRootDir = argv['_'][0];
 var outputPath = path.join(inputRootDir, 'features.csv');
+var descriptionPath = path.join(inputRootDir, 'features.txt');
 var allInputPaths = [];
 walker(inputRootDir)
   .on('file', function(file) {
@@ -167,6 +186,12 @@ function saveAllFeatures(allFeatures) {
     fields: _.map(kFeatureExtractors, 'name')
   });
   fs.writeFile(outputPath, csv, function(err) {
+    if (err) throw err;
+  });
+  featureDescriptions = _.reduce(kFeatureExtractors, function(result, featureExtractor) {
+      return result + featureExtractor.name + ': ' + featureExtractor.description + '\n';
+  }, '');
+  fs.writeFile(descriptionPath, featureDescriptions, function(err) {
     if (err) throw err;
   });
 }
