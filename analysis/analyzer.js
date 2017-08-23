@@ -11,39 +11,41 @@ var kFullIDRegex = /[0-9]{8}_P1a_[0-9]+_S[1-4]/;
 
 console.log('FILE LOADING');
 var argv = minimist(process.argv.slice(2));
-var inputPath = argv['_'][0];
-console.log('Loading tracing from \'' + inputPath + '\'');
-var outputPath = path.join(
-  path.dirname(inputPath),
-  path.basename(inputPath, '.json') + '_analyzed.json'
-);
-var updateMode = argv['update'];
-if (updateMode === 'true') {
-  console.log('Loading previous analysis results from \'' + outputPath + '\'');
-  console.log('');
-  jsonfile.readFile(outputPath, function(err, previousResults) {
-    if (err) throw err;
-    jsonfile.readFile(inputPath, function(err, tracing) {
-      onReadInputFile(err, tracing, previousResults);
+processInput(argv['_'][0], argv['update']);
+
+function processInput(inputPath, updateMode) {
+  console.log('Loading tracing from \'' + inputPath + '\'');
+  var outputPath = path.join(
+    path.dirname(inputPath),
+    path.basename(inputPath, '.json') + '_analyzed.json'
+  );
+  if (updateMode === 'true') {
+    console.log('Loading previous analysis results from \'' + outputPath + '\'');
+    console.log('');
+    jsonfile.readFile(outputPath, function(err, previousResults) {
+      if (err) throw err;
+      jsonfile.readFile(inputPath, _.bind(
+        onReadInputFile, undefined, _, _, previousResults, outputPath)
+      );
     });
-  });
-} else {
-  console.log('');
-  jsonfile.readFile(inputPath, onReadInputFile);
+  } else {
+    console.log('');
+    jsonfile.readFile(inputPath, _.bind(onReadInputFile, undefined, _, _, _, outputPath));
+  }
 }
 
-function onReadInputFile(err, tracing, previousResults) {
+function onReadInputFile(err, tracing, previousResults, outputPath) {
   if (err) throw err;
   var results = {};
   analyzeMetadata(results, tracing, previousResults);
   analyzeClientList(results, tracing, previousResults);
   eventAnalyzer.analyze(results, tracing, function(results) {
     signalAnalyzer.analyze(results, tracing);
-    saveResults(results);
+    saveResults(results, outputPath);
   }, previousResults);
 }
 
-function saveResults(results) {
+function saveResults(results, outputPath) {
   console.log('SAVING');
   console.log('Saving analysis results to \'' + outputPath + '\'');
   jsonfile.writeFile(outputPath, results, {spaces: 2}, function(err) {
