@@ -50,6 +50,14 @@ module.exports = {
       return utils.unsignedDistanceFromRange(value, getTargetRange(time, true));
     }
   },
+  squaredDistanceFromTargetRange: {
+    name: 'squaredDistanceFromSpO2TargetRange',
+    description: 'Squared percentage points between the SpO2 and the nearest bound of the (interpolated) NRP target range, if SpO2 is outside the range',
+    sourceSignalName: 'spO2Mean',
+    mapper: function(time, value) {
+      return utils.squaredDistanceFromRange(value, getTargetRange(time, true));
+    }
+  },
   signedDirectionFromTargetRange: {
     name: 'signedDirectionFromSpO2TargetRange',
     description: 'Sign of difference between the SpO2 and the nearest bound of the (interpolated) NRP target range, if SpO2 is outside the range',

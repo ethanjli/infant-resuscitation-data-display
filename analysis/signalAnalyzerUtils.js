@@ -26,7 +26,10 @@ module.exports.signedDistanceFromRange = function(value, range) {
   return 0;
 };
 module.exports.unsignedDistanceFromRange = function(value, range) {
-  return Math.abs(module.exports.signedDistanceFromRange(value, range))
+  return Math.abs(module.exports.signedDistanceFromRange(value, range));
+};
+module.exports.squaredDistanceFromRange = function(value, range) {
+  return Math.pow(module.exports.signedDistanceFromRange(value, range), 2);
 };
 module.exports.signedDirectionFromRange = function(value, range) {
   if (isNaN(range.lower) || isNaN(range.upper)) return null;

@@ -22,20 +22,23 @@ module.exports = {
       })
     }
     var segmentations = {};
-    analyzeSpO2Mean(annotations, segmentations, tracing, results.clients.controlPanel);
+    var integrations = {};
+    analyzeSpO2Mean(annotations, segmentations, integrations,
+      tracing, results.clients.controlPanel);
     analyzeFiO2(annotations, segmentations, tracing, results.clients.controlPanel);
     results.signalAnnotations = annotations;
     results.signalSegmentations = segmentations;
+    results.signalIntegrations = integrations;
     console.log('');
   }
 }
 
-function analyzeSpO2Mean(annotations, segmentations, tracing, controlPanelType) {
+function analyzeSpO2Mean(annotations, segmentations, integrations, tracing, controlPanelType) {
   var annotators = [
     spO2Analyzers.inTargetRange, spO2Analyzers.outsideTargetRange,
     spO2Analyzers.aboveTargetRange, spO2Analyzers.belowTargetRange,
     spO2Analyzers.signedDistanceFromTargetRange, spO2Analyzers.unsignedDistanceFromTargetRange,
-    spO2Analyzers.signedDirectionFromTargetRange,
+    spO2Analyzers.squaredDistanceFromTargetRange, spO2Analyzers.signedDirectionFromTargetRange,
     spO2Analyzers.generateRegion(controlPanelType)
   ];
   annotators.forEach(annotateWithMapper.bind(undefined, annotations, tracing.samples));
@@ -48,6 +51,12 @@ function analyzeSpO2Mean(annotations, segmentations, tracing, controlPanelType) 
   ];
   segmenters.forEach(segmentAnnotation.bind(undefined, annotations, segmentations));
   console.log('Segmented SpO2 signal annotations.');
+  var integrators = [
+    spO2Analyzers.signedDistanceFromTargetRange, spO2Analyzers.unsignedDistanceFromTargetRange,
+    spO2Analyzers.squaredDistanceFromTargetRange
+  ];
+  integrators.forEach(integrateAnnotation.bind(undefined, annotations, integrations));
+  console.log('Integrated SpO2 signal annotations.');
 }
 function analyzeFiO2(annotations, segmentations, tracing, controlPanelType) {
   var annotators = [
@@ -96,7 +105,7 @@ function segmentAnnotation(annotations, segmentations, annotator) {
   var annotationName = annotator.name;
   var annotation = annotations[annotationName];
   var time = annotations.scenarioTime.data;
-  segmentation = utils.segment(annotation.data)
+  var segmentation = utils.segment(annotation.data)
     .map(function(segment) {
       segment.start = Math.max(kMinStartTime, time[segment.startIndex]);
       segment.end = Math.min(kMaxEndTime, time[segment.endIndex]);
@@ -116,6 +125,25 @@ function segmentAnnotation(annotations, segmentations, annotator) {
       totalDurationsByValue: utils.totalDurationsByValue(segmentation),
       initialSegmentsByValue: utils.initialSegmentsByValue(segmentation)
     }
+  }
+}
+function integrateAnnotation(annotations, integrations, annotator) {
+  var annotationName = annotator.name;
+  var annotation = annotations[annotationName];
+  var time = annotations.scenarioTime.data;
+  var timeDifferences = _.map(time, function(t, i) {
+    if (i >= time.length - 1) { // At the last timestamp, the difference is not defined
+      return null;
+    }
+    // Return the time difference to the next timestamp
+    return time[i + 1] - t;
+  });
+  var integration = _.reduce(annotation.data, function(sum, value, i) {
+    return sum + value * timeDifferences[i];
+  }, 0);
+  integrations[annotationName] = {
+    description: annotation.description,
+    data: integration
   }
 }
 

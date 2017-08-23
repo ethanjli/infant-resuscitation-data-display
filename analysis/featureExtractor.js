@@ -151,6 +151,30 @@ var kFeatureExtractors = [{
     if (optional === undefined) return 0;
     return optional;
   }
+}, {
+  name: 'spO2SignedErrorIntegral',
+  description: 'Total integral of the signed error from the target SpO2 range',
+  extractor: function(analysisResults) {
+    var optional = analysisResults.signalIntegrations.signedDistanceFromSpO2TargetRange.data;
+    if (optional === undefined) return 0;
+    return optional;
+  }
+}, {
+  name: 'spO2UnsignedErrorIntegral',
+  description: 'Total integral of the unsigned error from the target SpO2 range',
+  extractor: function(analysisResults) {
+    var optional = analysisResults.signalIntegrations.unsignedDistanceFromSpO2TargetRange.data;
+    if (optional === undefined) return 0;
+    return optional;
+  }
+}, {
+  name: 'spO2SquaredErrorIntegral',
+  description: 'Total integral of the unsigned error from the target SpO2 range',
+  extractor: function(analysisResults) {
+    var optional = analysisResults.signalIntegrations.squaredDistanceFromSpO2TargetRange.data;
+    if (optional === undefined) return 0;
+    return optional;
+  }
 }];
 
 var argv = minimist(process.argv.slice(2));
