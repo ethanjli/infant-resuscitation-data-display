@@ -1,6 +1,7 @@
 var path = require('path');
 var jsonfile = require('jsonfile');
 var minimist = require('minimist');
+var walker = require('walker');
 var _ = require('lodash');
 var prompt = require('prompt-sync')();
 
@@ -11,7 +12,36 @@ var kFullIDRegex = /[0-9]{8}_P1a_[0-9]+_S[1-4]/;
 
 console.log('FILE LOADING');
 var argv = minimist(process.argv.slice(2));
-processInput(argv['_'][0], argv['update']);
+var inputPath = argv['_'][0];
+if (inputPath.endsWith('.json')) {
+  processInput(inputPath, argv['update']);
+} else {
+  var allUpdateInputPaths = [];
+  var updateMode = argv['update'];
+  walker(inputPath)
+    .on('file', function(file) {
+      if (file.endsWith('_analyzed.json')) {
+        allUpdateInputPaths.push(file.slice(0, -1 * '_analyzed.json'.length) + '.json');
+      }
+    })
+    .on('error', function(err, entry) {
+      throw err;
+    })
+    .on('end', function() {
+      console.log('Discovered all analyzable files.');
+      console.log(allUpdateInputPaths);
+      if (updateMode === 'true') {
+        if (allUpdateInputPaths.length > 0) {
+          console.log('Updating previously analyzed files.');
+          allUpdateInputPaths.forEach(_.bind(processInput, undefined, _, updateMode));
+        } else {
+          console.log('No analysis results to update. Run this script on some individual trackings first.');
+        }
+      } else {
+        console.log('Can only update previous analysis results in a directory.');
+      }
+    });
+}
 
 function processInput(inputPath, updateMode) {
   console.log('Loading tracing from \'' + inputPath + '\'');
