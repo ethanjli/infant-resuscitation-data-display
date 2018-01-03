@@ -96,6 +96,14 @@ var kFeatureExtractors = [{
     return optional;
   }
 }, {
+  name: 'inSpO2LooseTargetRangeDuration',
+  description: 'Total duration in which SpO2 was near the target range, specifically within +/- 5 percentage points of the target range.',
+  extractor: function(analysisResults) {
+    var optional = analysisResults.signalSegmentations.inSpO2LooseTargetRange.summary.totalDurationsByValue['true'];
+    if (optional === undefined) return 0;
+    return optional;
+  }
+}, {
   name: 'inSpO2TargetRangeStartTime',
   description: 'Time when SpO2 first became inside the target range',
   extractor: function(analysisResults) {

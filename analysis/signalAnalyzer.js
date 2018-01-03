@@ -35,7 +35,7 @@ module.exports = {
 
 function analyzeSpO2Mean(annotations, segmentations, integrations, tracing, controlPanelType) {
   var annotators = [
-    spO2Analyzers.inTargetRange, spO2Analyzers.outsideTargetRange,
+    spO2Analyzers.inTargetRange, spO2Analyzers.inLooseTargetRange, spO2Analyzers.outsideTargetRange,
     spO2Analyzers.aboveTargetRange, spO2Analyzers.belowTargetRange,
     spO2Analyzers.signedDistanceFromTargetRange, spO2Analyzers.unsignedDistanceFromTargetRange,
     spO2Analyzers.squaredDistanceFromTargetRange, spO2Analyzers.signedDirectionFromTargetRange,
@@ -44,7 +44,7 @@ function analyzeSpO2Mean(annotations, segmentations, integrations, tracing, cont
   annotators.forEach(annotateWithMapper.bind(undefined, annotations, tracing.samples));
   console.log('Annotated SpO2 signal.');
   var segmenters = [
-    spO2Analyzers.inTargetRange, spO2Analyzers.outsideTargetRange,
+    spO2Analyzers.inTargetRange, spO2Analyzers.inLooseTargetRange, spO2Analyzers.outsideTargetRange,
     spO2Analyzers.aboveTargetRange, spO2Analyzers.belowTargetRange,
     spO2Analyzers.signedDirectionFromTargetRange,
     spO2Analyzers.generateRegion(controlPanelType)

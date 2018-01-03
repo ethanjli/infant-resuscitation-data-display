@@ -10,6 +10,14 @@ module.exports = {
       return utils.inRange(value, getTargetRange(time, true));
     }
   },
+  inLooseTargetRange: {
+    name: 'inSpO2LooseTargetRange',
+    description: 'Whether the SpO2 is near the (interpolated) NRP target range, namely within +/- 5 percentage points.',
+    sourceSignalName: 'spO2Mean',
+    mapper: function(time, value) {
+      return utils.inLooseRange(value, getTargetRange(time, true));
+    }
+  },
   outsideTargetRange: {
     name: 'outsideSpO2TargetRange',
     description: 'Whether the SpO2 is outside the (interpolated) NRP target range',

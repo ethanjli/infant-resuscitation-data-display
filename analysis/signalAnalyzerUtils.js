@@ -7,6 +7,10 @@ module.exports.inRange = function(value, range) {
   if (isNaN(range.lower) || isNaN(range.upper)) return null;
   return value >= range.lower && value <= range.upper;
 };
+module.exports.inLooseRange = function(value, range) {
+  if (isNaN(range.lower) || isNaN(range.upper)) return null;
+  return value >= range.lower - 0.05 && value <= range.upper + 0.05;
+};
 module.exports.outsideRange = function(value, range) {
   if (isNaN(range.lower) || isNaN(range.upper)) return null;
   return value < range.lower || value > range.upper;
