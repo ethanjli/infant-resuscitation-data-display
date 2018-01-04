@@ -282,7 +282,7 @@ def build_pairing(df, binary_variable, values=(0, 1),
 
 # TESTING
 
-OUTCOMES = [
+TRACING_OUTCOMES = [
     'sensorPlacementTime', 'ppvStartTime', 'ccStartTime',
     'inSpO2TargetRangeStartTime',
     'inSpO2TargetRangeDuration', 'inSpO2LooseTargetRangeDuration',
@@ -291,6 +291,22 @@ OUTCOMES = [
     'aboveFiO2TargetRangeDuration', 'belowFiO2TargetRangeDuration',
     'spO2SignedErrorIntegral', 'spO2UnsignedErrorIntegral', 'spO2SquaredErrorIntegral',
     'fiO2LargeAdjustments'
+]
+
+GAZE_DURATION_OUTCOMES = [
+    'visitDuration_infant',
+    'visitDuration_warmerInstrumentPanel',
+    'visitDuration_fiO2Dial',
+    'visitDuration_spO2ReferenceTable',
+    'visitDuration_monitorFull',
+    'visitDuration_monitorBlank',
+    'visitDuration_monitorApgarTimer',
+    'visitDuration_monitorHeartRate',
+    'visitDuration_monitorFiO2',
+    'visitDuration_monitorGraph',
+    'visitDuration_monitorSpO2',
+    'visitDuration_combinedFiO2',
+    'visitDuration_combinedSpO2'
 ]
 
 def choose_marker(p_value):
@@ -356,8 +372,12 @@ def apply_tests(pairing, outcome_name, mask_inf=True):
     apply_t_test(df_a[outcome_name], df_b[outcome_name])
     apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
 
-def test_standard_outcomes(pairing, mask_inf=True):
-    for outcome in OUTCOMES:
+def test_tracing_outcomes(pairing, mask_inf=True):
+    for outcome in TRACING_OUTCOMES:
+        apply_tests(pairing, outcome, mask_inf)
+
+def test_gaze_duration_outcomes(pairing, mask_inf=True):
+    for outcome in GAZE_DURATION_OUTCOMES:
         apply_tests(pairing, outcome, mask_inf)
 
 
