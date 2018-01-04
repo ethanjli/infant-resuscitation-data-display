@@ -309,6 +309,22 @@ GAZE_DURATION_OUTCOMES = [
     'visitDuration_combinedSpO2'
 ]
 
+GAZE_COUNT_OUTCOMES = [
+    'visitCount_infant',
+    'visitCount_warmerInstrumentPanel',
+    'visitCount_fiO2Dial',
+    'visitCount_spO2ReferenceTable',
+    'visitCount_monitorFull',
+    'visitCount_monitorBlank',
+    'visitCount_monitorApgarTimer',
+    'visitCount_monitorHeartRate',
+    'visitCount_monitorFiO2',
+    'visitCount_monitorGraph',
+    'visitCount_monitorSpO2',
+    'visitCount_combinedFiO2',
+    'visitCount_combinedSpO2'
+]
+
 def choose_marker(p_value):
     if p_value < 0.05:
         marker = '**'
@@ -322,7 +338,7 @@ def choose_marker(p_value):
 
 def compute_differences(df_a, df_b, outcome_name):
     differences = df_a[outcome_name].values - df_b[outcome_name].values
-    return(differences, np.nanmean(differences))
+    return(differences, np.nanmean(differences), np.nanstd(differences))
 
 def apply_t_test(series_a, series_b, paired=True):
     if paired:
@@ -362,13 +378,13 @@ def apply_tests(pairing, outcome_name, mask_inf=True):
         (df_a, df_b) = exclude_infinities(pairing[0], pairing[1], outcome_name)
     else:
         (df_a, df_b) = pairing
-    (differences, mean_difference) = compute_differences(df_a, df_b, outcome_name)
-    n = len(differences)
+    (diffs, mean_diff, std_diff) = compute_differences(df_a, df_b, outcome_name)
+    n = len(diffs)
     print(outcome_name + ':')
     if n == 0:
         print('  Skipped.')
         return
-    print('  mean difference = {:.3f}'.format(mean_difference))
+    print('  mean diff = {:.3f}; stdev diff = {:.3f}'.format(mean_diff, std_diff))
     apply_t_test(df_a[outcome_name], df_b[outcome_name])
     apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
 
@@ -378,6 +394,10 @@ def test_tracing_outcomes(pairing, mask_inf=True):
 
 def test_gaze_duration_outcomes(pairing, mask_inf=True):
     for outcome in GAZE_DURATION_OUTCOMES:
+        apply_tests(pairing, outcome, mask_inf)
+
+def test_gaze_count_outcomes(pairing, mask_inf=True):
+    for outcome in GAZE_COUNT_OUTCOMES:
         apply_tests(pairing, outcome, mask_inf)
 
 
