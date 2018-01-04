@@ -183,6 +183,14 @@ var kFeatureExtractors = [{
     if (optional === undefined) return 0;
     return optional;
   }
+}, {
+  name: 'fiO2LargeAdjustments',
+  description: 'Total number of times FiO2 changed region',
+  extractor: function(analysisResults) {
+    var optional = analysisResults.signalSegmentations.fiO2Region.summary.numSegments;
+    if (optional === undefined) return 0;
+    return optional;
+  }
 }];
 
 var argv = minimist(process.argv.slice(2));
