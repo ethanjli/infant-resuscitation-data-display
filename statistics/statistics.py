@@ -192,20 +192,29 @@ CATEGORY_VALUES = {
 # PAIRING
 
 class Pairing(object):
-    def __init__(self, df, binary_variable, values=(0, 1)):
-        self.dfs = [
-            df[df[binary_variable] == value]
-            for value in values
-        ]
-        self.variable = binary_variable
-        try:
-            self.category_names = CATEGORY_NAMES[self.variable]
-        except KeyError:
-            self.category_names = None
-        try:
-            self.category_values = CATEGORY_VALUES[self.variable]
-        except KeyError:
-            self.category_values = None
+    def __init__(self, df, variable_name, values=(0, 1),
+                 masks=None, category_names=None):
+        self.category_names = None
+        self.category_values = None
+        self.variable = variable_name
+        if values is not None:
+            self.dfs = [
+                df[df[variable_name] == value]
+                for value in values
+            ]
+            try:
+                self.category_names = CATEGORY_NAMES[self.variable]
+            except KeyError:
+                pass
+            try:
+                self.category_values = CATEGORY_VALUES[self.variable]
+            except KeyError:
+                pass
+        else:
+            self.dfs = [df[mask] for mask in masks]
+            self.category_names = [name for name in category_names]
+            self.category_values = dict(zip(category_names,
+                                            range(len(category_names))))
 
     def __len__(self):
         return 2
@@ -231,18 +240,19 @@ class Pairing(object):
         except KeyError:
             return self.dfs[key]
 
-    def describe(self):
+    def describe(self, tests=True):
         print('Pairing against {}:'.format(self.variable))
         print('  0: {} vs. 1: {}'.format(self.category_names[0], self.category_names[1]))
         print('  {} 0 vs. 1 pairs.'.format(len(self.dfs[0])))
-        print('  Paired t-test alternative hypotheses:')
-        print('    Ha left-tailed (diff < 0): mean {} - mean {} < 0'.format(0, 1))
-        print('    Ha two-tailed (|diff| > 0): mean {} - mean {} != 0'.format(0, 1))
-        print('    Ha right-tailed (diff > 0): mean {} - mean {} > 0'.format(0, 1))
-        print('  Wilcoxon signed-rank alternative hypotheses:')
-        print('    Ha left-tailed (P(x > y) < 0.5)')
-        print('    Ha two-tailed (P(x > y) != 0.5)')
-        print('    Ha right-tailed (P(x > y) > 0.5)')
+        if tests:
+            print('  Paired t-test alternative hypotheses:')
+            print('    Ha left-tailed (diff < 0): mean {} - mean {} < 0'.format(0, 1))
+            print('    Ha two-tailed (|diff| > 0): mean {} - mean {} != 0'.format(0, 1))
+            print('    Ha right-tailed (diff > 0): mean {} - mean {} > 0'.format(0, 1))
+            print('  Wilcoxon signed-rank alternative hypotheses:')
+            print('    Ha left-tailed (P(x > y) < 0.5)')
+            print('    Ha two-tailed (P(x > y) != 0.5)')
+            print('    Ha right-tailed (P(x > y) > 0.5)')
 
 def series_intersection_mask(df_a, df_b, series_name):
     return df_a[series_name].isin(df_b[series_name])
@@ -277,6 +287,11 @@ def build_pairing(df, binary_variable, values=(0, 1),
     if len(pairing[0]) != len(pairing[1]):
         raise ValueError('Pairing sets have different lengths: {}, {}'
                          .format(len(pairing[0]), len(pairing[1])))
+    return pairing
+
+def build_stratification(df, stratification_name, category_names, masks):
+    pairing = Pairing(df, stratification_name, values=None,
+                      masks=masks, category_names=category_names)
     return pairing
 
 
