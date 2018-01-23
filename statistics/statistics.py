@@ -289,6 +289,10 @@ def build_pairing(df, binary_variable, values=(0, 1),
                          .format(len(pairing[0]), len(pairing[1])))
     return pairing
 
+def build_split(df, binary_variable, values=(0, 1)):
+    pairing = Pairing(df, binary_variable, values=values)
+    return pairing
+
 def build_stratification(df, stratification_name, category_names, masks):
     pairing = Pairing(df, stratification_name, values=None,
                       masks=masks, category_names=category_names)
