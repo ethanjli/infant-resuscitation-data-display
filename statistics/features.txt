@@ -1,0 +1,22 @@
+id: Full unique tracing id (subject+scenario)
+subjectNumber: Subject id
+scenarioNumber: Scenario number
+newAfterOld: Whether the new display came after the old display for the scenario type; 0 is before, 1 is after
+scenarioType: Scenario type; 0 is ideal, 1 is extreme
+displayType: Display type; 0 is minimal, 1 is full
+sensorPlacementTime: Time when the pulse ox was placed on the infant
+ppvStartTime: Time when PPV was started
+ccStartTime: Time when CC was started
+inSpO2TargetRangeDuration: Total duration in which SpO2 was inside the target range
+inSpO2LooseTargetRangeDuration: Total duration in which SpO2 was near the target range, specifically within +/- 5 percentage points of the target range.
+inSpO2TargetRangeStartTime: Time when SpO2 first became inside the target range
+aboveSpO2TargetRangeDuration: Total duration in which SpO2 was above the target range
+belowSpO2TargetRangeDuration: Total duration in which SpO2 was above the target range
+inFiO2TargetRangeDuration: Total duration in which FiO2 was inside the optimal range
+inFiO2TargetRangeStartTime: Time when FiO2 first became inside the optimal range
+aboveFiO2TargetRangeDuration: Total duration in which FiO2 was above the target range
+belowFiO2TargetRangeDuration: Total duration in which FiO2 was above the target range
+spO2SignedErrorIntegral: Total integral of the signed error from the target SpO2 range
+spO2UnsignedErrorIntegral: Total integral of the unsigned error from the target SpO2 range
+spO2SquaredErrorIntegral: Total integral of the unsigned error from the target SpO2 range
+fiO2LargeAdjustments: Total number of times FiO2 changed region

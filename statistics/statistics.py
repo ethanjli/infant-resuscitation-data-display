@@ -31,24 +31,24 @@ GAZE_ROW_BOUNDS = {
     'visitDuration': {
         'full': {
             'header': 2,
-            'last': 73,
+            'last': 81,
         },
         'minimal': {
-            'header': 79,
-            'last': 150,
+            'header': 87,
+            'last': 166,
         },
-        'last': 155
+        'last': 171
     },
     'visitCount': {
         'full': {
             'header': 2,
-            'last': 73,
+            'last': 81,
         },
         'minimal': {
-            'header': 78,
-            'last': 149,
+            'header': 86,
+            'last': 165,
         },
-        'last': 151
+        'last': 167
     }
 }
 
@@ -80,6 +80,16 @@ GAZE_COMPUTE_COLUMNS = {
     'combinedSpO2': ['spO2ReferenceTable', 'monitorSpO2', 'monitorGraph']
 }
 
+DEMO_COMPUTE_COLUMNS = {
+    'resusLDnonzero': ('resusLD', 0, True),
+    'cumulativeNICU5': ('cumulativeNICU', 5, False),
+    'cumulativeNICU10': ('cumulativeNICU', 10, False),
+    'cumulativeNICU13': ('cumulativeNICU', 13, False),
+    'resusLD20': ('resusLD', 20, False),
+}
+
+DEMO_SHEET_NAME = '36908'
+
 def load_tracing_features(filename='features.csv', sort='type', fillna=250):
     tracing_df = pd.read_csv(filename, index_col=0)
     if sort == 'type':
@@ -95,8 +105,15 @@ def load_recording_relations(filename='recordings.csv'):
     recording_df = pd.read_csv(filename, index_col=0)
     return recording_df
 
-def associate_recordings(recording_df, tracing_df):
-    merged_df = merge_dfs(tracing_df, recording_df)
+def associate_demographics(recording_df, tracing_df, demographic_df):
+    merged_df = pd.merge(recording_df, demographic_df, how='outer',
+                         left_on='code', right_index=True)
+    merged_df = merge_dfs(tracing_df, merged_df)
+    return merged_df
+
+def associate_recordings(recording_df, tracing_df, demographic_df=None):
+    merged_df = recording_df
+    merged_df = merge_dfs(tracing_df, merged_df)
     merged_df.dropna(subset=['recording'], inplace=True)
     merged_df.reset_index(inplace=True)
     merged_df.set_index('recording', inplace=True, verify_integrity=True)
@@ -144,6 +161,20 @@ def check_gaze_recording_associations(recording_df, gaze_dfs):
                              .format(merged_df.index.values[id_mismatch_mask]))
         df.drop(columns=['id'], inplace=True)
 
+def load_demographic_features(filename='demographics.xlsx'):
+    features = pd.read_excel(
+        filename, sheet_name=DEMO_SHEET_NAME, usecols='B,T,W,Z', index_col=0,
+        header=0, skip_footer=6,
+    )
+    return features
+
+def compute_demo_features(df):
+    for (column, (split_column, split_threshold, exclusive)) in DEMO_COMPUTE_COLUMNS.items():
+        if exclusive:
+            df[column] = df[split_column] > split_threshold
+        else:
+            df[column] = df[split_column] >= split_threshold
+
 def compute_gaze_features(gaze_dfs):
     for (feature_set, df) in gaze_dfs.items():
         for (column, summand_columns) in GAZE_COMPUTE_COLUMNS.items():
@@ -166,7 +197,13 @@ CATEGORY_NAMES = {
     'scenarioType': ['easy', 'hard'],
     'displayType': ['minimal', 'full'],
     'newAfterOld': ['oldAfterNew', 'newAfterOld'],
-    'scenarioNumber': ['first', 'second']
+    'scenarioNumber': ['first', 'second'],
+    'resusLDnonzero': ['noLDResusPastYear', 'LDResusPastYear'],
+    'education': ['RN', 'MD'],
+    'cumulativeNICU5': ['<5CumulativeNICUYears', '>=5CumulativeNICUYears'],
+    'cumulativeNICU10': ['<10CumulativeNICUYears', '>=10CumulativeNICUYears'],
+    'cumulativeNICU13': ['<13CumulativeNICUYears', '>=13CumulativeNICUYears'],
+    'resusLD20': ['<20LDResusPastYear', '>=20LDResusPastYear'],
 }
 
 CATEGORY_VALUES = {
@@ -185,7 +222,31 @@ CATEGORY_VALUES = {
     'scenarioNumber': {
         'first': 0,
         'second': 1
-    }
+    },
+    'resusLDnonzero': {
+        'noLDResusPastYear': 0,
+        'LDResusPastYear': 1,
+    },
+    'education': {
+        'RN': 0,
+        'MD': 1,
+    },
+    'cumulativeNICU5': {
+        '<5CumulativeNICUYears': 0,
+        '>=5CumulativeNICUYears': 1,
+    },
+    'cumulativeNICU10': {
+        '<10CumulativeNICUYears': 0,
+        '>=10CumulativeNICUYears': 1,
+    },
+    'cumulativeNICU13': {
+        '<13CumulativeNICUYears': 0,
+        '>=13CumulativeNICUYears': 1,
+    },
+    'resusLD20': {
+        '<20LDResusPastYear': 0,
+        '>=20LDResusPastYear': 1,
+    },
 }
 
 
@@ -265,9 +326,14 @@ def intersect_by_series(df_a, df_b, series_name):
     b_mask = series_intersection_mask(df_b, df_a, series_name)
     return (df_a[a_mask], df_b[b_mask])
 
-def exclude_infinities(df_a, df_b, series_name):
-    mask = series_finite_mask(df_a, df_b, series_name)
-    return (df_a[mask], df_b[mask])
+def exclude_infinities(df_a, df_b, series_name, paired=True):
+    if paired:
+        mask = series_finite_mask(df_a, df_b, series_name)
+        return (df_a[mask], df_b[mask])
+    else:
+        mask_a = series_finite_mask(df_a, df_a, series_name)
+        mask_b = series_finite_mask(df_b, df_b, series_name)
+        return (df_a[mask_a], df_b[mask_b])
 
 def check_pairing_validity(df_a, df_b, series_name):
     if not np.all(df_a[series_name].values == df_b[series_name].values):
@@ -302,14 +368,14 @@ def build_stratification(df, stratification_name, category_names, masks):
 # TESTING
 
 TRACING_OUTCOMES = [
-    'sensorPlacementTime', 'ppvStartTime', 'ccStartTime',
-    'inSpO2TargetRangeStartTime',
+    # 'sensorPlacementTime', 'ppvStartTime', 'ccStartTime',
+    # 'inSpO2TargetRangeStartTime',
     'inSpO2TargetRangeDuration', 'inSpO2LooseTargetRangeDuration',
-    'aboveSpO2TargetRangeDuration', 'belowSpO2TargetRangeDuration',
-    'inFiO2TargetRangeStartTime', 'inFiO2TargetRangeDuration',
-    'aboveFiO2TargetRangeDuration', 'belowFiO2TargetRangeDuration',
-    'spO2SignedErrorIntegral', 'spO2UnsignedErrorIntegral', 'spO2SquaredErrorIntegral',
-    'fiO2LargeAdjustments'
+    # 'aboveSpO2TargetRangeDuration', 'belowSpO2TargetRangeDuration',
+    # 'inFiO2TargetRangeStartTime', 'inFiO2TargetRangeDuration',
+    # 'aboveFiO2TargetRangeDuration', 'belowFiO2TargetRangeDuration',
+    # 'spO2SignedErrorIntegral', 'spO2UnsignedErrorIntegral', 'spO2SquaredErrorIntegral',
+    # 'fiO2LargeAdjustments'
 ]
 
 GAZE_DURATION_OUTCOMES = [
@@ -392,32 +458,36 @@ def apply_wilcoxon_test(series_a, series_b):
     print('  {}P(x > y) < 0.5: p = {:.3f}'.format(choose_marker(left_p), left_p))
     print('  {}P(x > y) > 0.5: p = {:.3f}'.format(choose_marker(right_p), right_p))
 
-def apply_tests(pairing, outcome_name, mask_inf=True):
+def apply_tests(pairing, outcome_name, mask_inf=True, paired=True):
     if mask_inf:
-        (df_a, df_b) = exclude_infinities(pairing[0], pairing[1], outcome_name)
+        (df_a, df_b) = exclude_infinities(pairing[0], pairing[1], outcome_name, paired)
     else:
         (df_a, df_b) = pairing
-    (diffs, mean_diff, std_diff) = compute_differences(df_a, df_b, outcome_name)
-    n = len(diffs)
+    n = 1
+    if paired:
+        (diffs, mean_diff, std_diff) = compute_differences(df_a, df_b, outcome_name)
+        n = len(diffs)
     print(outcome_name + ':')
     if n == 0:
         print('  Skipped.')
         return
-    print('  mean diff = {:.3f}; stdev diff = {:.3f}'.format(mean_diff, std_diff))
-    apply_t_test(df_a[outcome_name], df_b[outcome_name])
-    apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
+    if paired:
+        print('  mean diff = {:.3f}; stdev diff = {:.3f}'.format(mean_diff, std_diff))
+    apply_t_test(df_a[outcome_name], df_b[outcome_name], paired)
+    if paired:
+        apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
 
-def test_tracing_outcomes(pairing, mask_inf=True):
+def test_tracing_outcomes(pairing, mask_inf=True, paired=True):
     for outcome in TRACING_OUTCOMES:
-        apply_tests(pairing, outcome, mask_inf)
+        apply_tests(pairing, outcome, mask_inf, paired)
 
-def test_gaze_duration_outcomes(pairing, mask_inf=True):
+def test_gaze_duration_outcomes(pairing, mask_inf=True, paired=True):
     for outcome in GAZE_DURATION_OUTCOMES:
-        apply_tests(pairing, outcome, mask_inf)
+        apply_tests(pairing, outcome, mask_inf, paired)
 
-def test_gaze_count_outcomes(pairing, mask_inf=True):
+def test_gaze_count_outcomes(pairing, mask_inf=True, paired=True):
     for outcome in GAZE_COUNT_OUTCOMES:
-        apply_tests(pairing, outcome, mask_inf)
+        apply_tests(pairing, outcome, mask_inf, paired)
 
 
 # PLOTTING
