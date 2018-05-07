@@ -112,8 +112,10 @@ def associate_demographics(recording_df, tracing_df, demographic_df):
     return merged_df
 
 def associate_recordings(recording_df, tracing_df, demographic_df=None):
-    merged_df = recording_df
-    merged_df = merge_dfs(tracing_df, merged_df)
+    if demographic_df is not None:
+        merged_df = associate_demographics(recording_df, tracing_df, demographic_df)
+    else:
+        merged_df = merge_dfs(tracing_df, recording_df)
     merged_df.dropna(subset=['recording'], inplace=True)
     merged_df.reset_index(inplace=True)
     merged_df.set_index('recording', inplace=True, verify_integrity=True)
@@ -381,6 +383,8 @@ TRACING_OUTCOMES = [
     # 'fiO2LargeAdjustments'
 ]
 
+DEMO_OUTCOMES = ['education', 'resusLD', 'cumulativeNICU']
+
 GAZE_DURATION_OUTCOMES = [
     'visitDuration_infant',
     'visitDuration_warmerInstrumentPanel',
@@ -390,8 +394,8 @@ GAZE_DURATION_OUTCOMES = [
     'visitDuration_monitorBlank',
     'visitDuration_monitorApgarTimer',
     'visitDuration_monitorHeartRate',
-    'visitDuration_monitorFiO2',
-    'visitDuration_monitorGraph',
+    # 'visitDuration_monitorFiO2',
+    # 'visitDuration_monitorGraph',
     'visitDuration_monitorSpO2',
     'visitDuration_combinedFiO2',
     'visitDuration_combinedSpO2'
@@ -406,8 +410,8 @@ GAZE_COUNT_OUTCOMES = [
     'visitCount_monitorBlank',
     'visitCount_monitorApgarTimer',
     'visitCount_monitorHeartRate',
-    'visitCount_monitorFiO2',
-    'visitCount_monitorGraph',
+    # 'visitCount_monitorFiO2',
+    # 'visitCount_monitorGraph',
     'visitCount_monitorSpO2',
     'visitCount_combinedFiO2',
     'visitCount_combinedSpO2'
