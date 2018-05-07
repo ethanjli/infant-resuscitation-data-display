@@ -476,6 +476,10 @@ def apply_tests(pairing, outcome_name, mask_inf=True, paired=True):
         return
     if paired:
         print('  mean diff = {:.3f}; stdev diff = {:.3f}'.format(mean_diff, std_diff))
+    else:
+        mean_a = np.nanmean(df_a[outcome_name].values)
+        mean_b = np.nanmean(df_b[outcome_name].values)
+        print('  mean 0 = {:.3f}; mean 1 = {:.3f}'.format(mean_a, mean_b))
     apply_t_test(df_a[outcome_name], df_b[outcome_name], paired)
     # if paired:
     #     apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
