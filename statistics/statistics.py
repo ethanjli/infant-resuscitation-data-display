@@ -313,10 +313,10 @@ class Pairing(object):
             print('    Ha left-tailed (diff < 0): mean {} - mean {} < 0'.format(0, 1))
             print('    Ha two-tailed (|diff| > 0): mean {} - mean {} != 0'.format(0, 1))
             print('    Ha right-tailed (diff > 0): mean {} - mean {} > 0'.format(0, 1))
-            print('  Wilcoxon signed-rank alternative hypotheses:')
-            print('    Ha left-tailed (P(x > y) < 0.5)')
-            print('    Ha two-tailed (P(x > y) != 0.5)')
-            print('    Ha right-tailed (P(x > y) > 0.5)')
+            # print('  Wilcoxon signed-rank alternative hypotheses:')
+            # print('    Ha left-tailed (P(x > y) < 0.5)')
+            # print('    Ha two-tailed (P(x > y) != 0.5)')
+            # print('    Ha right-tailed (P(x > y) > 0.5)')
 
 def series_intersection_mask(df_a, df_b, series_name):
     return df_a[series_name].isin(df_b[series_name])
@@ -477,8 +477,8 @@ def apply_tests(pairing, outcome_name, mask_inf=True, paired=True):
     if paired:
         print('  mean diff = {:.3f}; stdev diff = {:.3f}'.format(mean_diff, std_diff))
     apply_t_test(df_a[outcome_name], df_b[outcome_name], paired)
-    if paired:
-        apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
+    # if paired:
+    #     apply_wilcoxon_test(df_a[outcome_name], df_b[outcome_name])
 
 def test_tracing_outcomes(pairing, mask_inf=True, paired=True):
     for outcome in TRACING_OUTCOMES:
