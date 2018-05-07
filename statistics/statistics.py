@@ -304,7 +304,10 @@ class Pairing(object):
     def describe(self, tests=True):
         print('Pairing against {}:'.format(self.variable))
         print('  0: {} vs. 1: {}'.format(self.category_names[0], self.category_names[1]))
-        print('  {} 0 vs. 1 pairs.'.format(len(self.dfs[0])))
+        if len(self.dfs[0]) == len(self.dfs[1]):
+            print('  {} 0 vs. 1 pairs.'.format(len(self.dfs[0])))
+        else:
+            print('  {} 0 examples vs. {} 1 examples.'.format(len(self.dfs[0]), len(self.dfs[1])))
         if tests:
             print('  Paired t-test alternative hypotheses:')
             print('    Ha left-tailed (diff < 0): mean {} - mean {} < 0'.format(0, 1))
